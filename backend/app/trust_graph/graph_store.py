@@ -2,7 +2,7 @@
 Trust Graph read/write layer.
 
 Every subsystem (KAN, routing, verification) writes structured metadata
-through this module — nothing writes to the DB directly. The Explanation
+through this module - nothing writes to the DB directly. The Explanation
 Engine reads through here too.
 
 generation_number: a query can be regenerated (Reasoning Sandbox, F36) after

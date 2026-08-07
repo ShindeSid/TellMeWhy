@@ -4,7 +4,7 @@ Stable I/O contract for the KAN Cognitive Router.
 Any routing implementation (heuristic, small classifier, a real
 Kolmogorov-Arnold Network) must accept QueryInput and return
 RoutingDecision. Nothing outside this package should depend on how a
-RoutingDecision is produced — only on this shape. That is what lets the
+RoutingDecision is produced - only on this shape. That is what lets the
 router be replaced later without touching the API, adaptive routing
 engine, or frontend.
 """

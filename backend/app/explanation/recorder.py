@@ -1,14 +1,14 @@
 """
 Writes the reasoning trace (steps, confidence events, trust score) after an
 answer is generated and verified. This is deliberately NOT the "Explanation
-Engine" the architecture doc describes — that engine only *reads* the Trust
+Engine" the architecture doc describes - that engine only *reads* the Trust
 Graph. This module is the write side: it turns one real RoutingDecision,
 one real generated answer, and (as of Milestone 6) real claim verification
 results into the structured stages the frontend visualizes.
 
 Honesty constraint: the "verification" stage and trust score only claim what
 actually happened. Claim verification here is a heuristic lexical-overlap
-check (app/verification/verifier.py), not semantic fact-checking — the
+check (app/verification/verifier.py), not semantic fact-checking - the
 wording says so rather than implying a stronger guarantee.
 """
 
@@ -65,7 +65,7 @@ async def record_reasoning_trace(
             "Retrieved supporting context for the RAG pipeline."
             if generation_number == 1
             else "Reused previously retrieved sources, filtered to the ones currently enabled "
-            "(Reasoning Sandbox regeneration — no new vector search was run)."
+            "(Reasoning Sandbox regeneration - no new vector search was run)."
         )
         stages.append(("retrieval", retrieval_summary, retrieval_conf))
         prev_conf = retrieval_conf
@@ -79,7 +79,7 @@ async def record_reasoning_trace(
 
     # Verification stage confidence blends the pre-generation estimate with
     # what claim verification actually found against real sources. Without
-    # sources, every claim defaults to "weak" — that's an absence of
+    # sources, every claim defaults to "weak" - that's an absence of
     # evidence, not evidence of ~50% accuracy, so it must not move the score.
     if verification_score is not None and had_sources:
         verification_conf = round((reasoning_conf + verification_score) / 2, 2)
@@ -117,14 +117,14 @@ async def record_reasoning_trace(
     elif verification_score is not None and not had_sources:
         plain_english_summary = (
             f"Overall trust is {overall_trust:.0%}. No external sources were retrieved for this "
-            "route, so claims could only be flagged as unverified rather than checked — this "
+            "route, so claims could only be flagged as unverified rather than checked - this "
             "reflects the model's own output, not independent fact-checking."
         )
     else:
         plain_english_summary = (
             f"This is a preliminary confidence estimate ({overall_trust:.0%}) based on how the query "
             "was assessed before generation. No claims could be verified against external sources "
-            "for this route — treat it as a rough signal, not a guarantee."
+            "for this route - treat it as a rough signal, not a guarantee."
         )
 
     await graph_store.save_trust_score(

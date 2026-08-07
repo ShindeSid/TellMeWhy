@@ -40,7 +40,7 @@ async def list_demo_scenarios() -> DemoScenarioListResponse:
 async def run_demo_scenario(scenario_id: str) -> AnswerResponse:
     """Runs a preset scenario through the real pipeline end to end (KAN
     routing, verification, trust scoring are all computed live from the
-    scenario's query text — only the LLM call and retrieval are canned, via
+    scenario's query text - only the LLM call and retrieval are canned, via
     DEMO_MODE). Returns the same shape as POST /queries/{id}/answer so the
     frontend can load it into the normal workspace view."""
     scenario = find_scenario_by_id(scenario_id)

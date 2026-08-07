@@ -1,10 +1,10 @@
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
-pydantic==2.9.2
-pydantic-settings==2.5.2
+pydantic>=2.9.2,<3
+pydantic-settings>=2.5.2,<3
 sqlalchemy==2.0.35
 aiosqlite==0.20.0
-chromadb==0.5.15
+chromadb>=0.5.15,<2
 google-generativeai==0.8.3
 python-dotenv==1.0.1
 python-multipart==0.0.9

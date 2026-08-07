@@ -144,7 +144,7 @@ async def regenerate_answer(query_id: str) -> AnswerResponse:
     latest_generation = await graph_store.get_latest_generation_number(query_id)
     if latest_generation == 0:
         raise HTTPException(
-            status_code=409, detail="No prior answer to regenerate from — call /answer first."
+            status_code=409, detail="No prior answer to regenerate from - call /answer first."
         )
 
     enabled_sources = await graph_store.list_enabled_sources(query_id)

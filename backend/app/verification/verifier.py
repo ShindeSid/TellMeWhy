@@ -1,5 +1,5 @@
 """
-Meta Verification Layer (F27). Never generates answers — only verifies
+Meta Verification Layer (F27). Never generates answers - only verifies
 claims that already exist. Heuristic lexical-overlap check against
 retrieved context, not semantic entailment; the verification_notes on each
 claim say so explicitly rather than implying a stronger guarantee than the

@@ -41,7 +41,7 @@ _QUESTION_LINE = re.compile(r"Question:\s*(.+)")
 
 class DemoLLMClient:
     """Demo Mode (F39): returns a preset answer instead of calling Gemini.
-    Matches the scenario by looking for its query text inside the prompt —
+    Matches the scenario by looking for its query text inside the prompt -
     works for both the direct prompt (small/large LLM) and the
     "Context:...\\nQuestion: ...\\n" RAG prompt shape."""
 
@@ -54,7 +54,7 @@ class DemoLLMClient:
             return scenario.canned_answer
 
         return (
-            "[Demo Mode] No preset answer matches this query — Demo Mode only has canned "
+            "[Demo Mode] No preset answer matches this query - Demo Mode only has canned "
             "responses for the three preset scenarios (Medical, Programming, Current Affairs). "
             "Try one of those, or configure a real GEMINI_API_KEY to answer arbitrary questions."
         )

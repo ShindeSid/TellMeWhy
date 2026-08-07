@@ -1,5 +1,5 @@
 """Splits a generated answer into atomic claims (F27). Deliberately a plain
-sentence splitter, not an LLM call — claim *verification* needs judgment,
+sentence splitter, not an LLM call - claim *verification* needs judgment,
 but claim *segmentation* doesn't, and keeping this heuristic means it works
 even when the Gemini key is unavailable."""
 

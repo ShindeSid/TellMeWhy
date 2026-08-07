@@ -1,6 +1,6 @@
 """
 Adaptive Routing Engine (F11): executes the route a RoutingDecision already
-chose. It does not re-decide anything — that's the KAN router's job — it
+chose. It does not re-decide anything - that's the KAN router's job - it
 only dispatches: small LLM, large LLM, or RAG (retrieval + large LLM).
 
 Also backs the Reasoning Sandbox (F36) regeneration path: `regenerate_with_sources`
@@ -64,7 +64,7 @@ class AdaptiveRoutingEngine:
         context = (
             self._join_chunk_texts(source_texts)
             if source_texts
-            else "(no sources are currently enabled — say the answer cannot be grounded in evidence)"
+            else "(no sources are currently enabled - say the answer cannot be grounded in evidence)"
         )
         answer = await self._generate_with_context(query_text, context)
         return GenerationResult(answer_text=answer, context_used=context)
@@ -104,8 +104,8 @@ class AdaptiveRoutingEngine:
             from app.db.chroma_client import get_sources_collection
         except ImportError as exc:
             raise RAGUnavailableError(
-                "chromadb is not installed in this environment "
-                "(requires MSVC Build Tools on Windows for chroma-hnswlib)."
+                "chromadb is not installed in this environment. Run "
+                "'pip install -r requirements.txt' in backend/ to install it."
             ) from exc
 
         collection = get_sources_collection()

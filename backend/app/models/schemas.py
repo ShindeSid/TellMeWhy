@@ -1,6 +1,6 @@
 """API-facing request/response models. Distinct from KAN's internal
 QueryInput/RoutingDecision (app/kan/interface.py) and from the Trust Graph's
-DB-mirroring records (app/trust_graph/schema.py) — this is what the
+DB-mirroring records (app/trust_graph/schema.py) - this is what the
 frontend actually sees over HTTP."""
 
 from pydantic import BaseModel, Field

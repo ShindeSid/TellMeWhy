@@ -1,6 +1,6 @@
 """
 Default CognitiveRouter implementation: rule-based, no model dependency.
-Deliberately not a real KAN — it exists so the rest of the system can be
+Deliberately not a real KAN - it exists so the rest of the system can be
 built and demoed against the CognitiveRouter contract (app/kan/interface.py)
 today. Swap in a learned model later by implementing the same Protocol;
 nothing outside this file needs to change.
