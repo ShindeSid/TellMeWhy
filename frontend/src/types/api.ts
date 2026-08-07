@@ -1,5 +1,5 @@
 // Mirrors backend/app/models/schemas.py and backend/app/trust_graph/schema.py.
-// Keep in sync by hand for now — no shared codegen in a 24h hackathon.
+// Keep in sync by hand for now - no shared codegen in a 24h hackathon.
 
 export type Route = "small_llm" | "large_llm" | "rag";
 export type RiskLevel = "low" | "medium" | "high";

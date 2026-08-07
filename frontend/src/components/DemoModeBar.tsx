@@ -16,17 +16,16 @@ export function DemoModeBar() {
       .catch(() => setUnavailable(true));
   }, []);
 
-  // Backend not running DEMO_MODE=true, or scenarios list failed — say nothing
+  // Backend not running DEMO_MODE=true, or scenarios list failed - say nothing
   // rather than showing broken buttons.
   if (unavailable || !scenarios) return null;
 
   const isBusy = status === "routing" || status === "generating";
 
   return (
-    <div className="flex flex-col gap-2 rounded border border-neutral-200 p-3">
-      <p className="text-xs font-medium text-neutral-500">
-        Demo Mode — preset scenarios (no live API key needed)
-      </p>
+    <div className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+      <p className="text-sm font-semibold">Try a demo question</p>
+      <p className="text-xs text-neutral-500">No setup needed - pick one to see the full experience.</p>
       <div className="flex flex-wrap gap-2" role="group" aria-label="Demo scenarios">
         {scenarios.map((scenario) => (
           <button
@@ -34,7 +33,7 @@ export function DemoModeBar() {
             type="button"
             disabled={isBusy}
             onClick={() => void runDemoScenario(scenario.id)}
-            className="rounded border border-neutral-300 px-3 py-1.5 text-xs disabled:opacity-40"
+            className="rounded-lg border border-neutral-300 px-3.5 py-2 text-sm font-medium transition-colors hover:bg-neutral-100 disabled:opacity-40"
           >
             {scenario.title}
           </button>

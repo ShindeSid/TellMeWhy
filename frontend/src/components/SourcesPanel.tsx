@@ -1,3 +1,4 @@
+import { formatPercent } from "@/lib/format";
 import { useWorkspaceStore } from "@/store/useWorkspaceStore";
 
 export function SourcesPanel() {
@@ -11,27 +12,40 @@ export function SourcesPanel() {
   if (status !== "ready" || sources.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium">Sources</h2>
+        <div>
+          <h2 className="text-sm font-semibold">Where this came from</h2>
+          <p className="text-xs text-neutral-500">
+            Uncheck a source and regenerate to see how the answer changes without it.
+          </p>
+        </div>
         {generationCount > 1 && (
-          <span className="text-xs text-neutral-400">version {generationCount}</span>
+          <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 text-xs text-neutral-500">
+            version {generationCount}
+          </span>
         )}
       </div>
       <ul className="flex flex-col gap-2">
         {sources.map((source) => (
-          <li key={source.id} className="flex items-start gap-2 rounded border border-neutral-200 p-2 text-xs">
+          <li
+            key={source.id}
+            className={`flex items-start gap-2 rounded-lg border p-2.5 text-sm transition-opacity ${
+              source.enabled ? "border-neutral-200" : "border-neutral-100 opacity-50"
+            }`}
+          >
             <input
               type="checkbox"
               checked={source.enabled}
               disabled={isRegenerating}
               onChange={(e) => void toggleSource(source.id, e.target.checked)}
-              className="mt-0.5"
+              className="mt-0.5 accent-neutral-900"
+              aria-label={`Use ${source.title ?? "this source"} when generating the answer`}
             />
             <div>
               <p className="font-medium">{source.title ?? "Untitled source"}</p>
               {source.similarity !== null && (
-                <p className="text-neutral-500">similarity {Math.round(source.similarity * 100)}%</p>
+                <p className="text-xs text-neutral-500">{formatPercent(source.similarity)} relevant to your question</p>
               )}
             </div>
           </li>
@@ -41,7 +55,7 @@ export function SourcesPanel() {
         type="button"
         onClick={() => void regenerate()}
         disabled={isRegenerating}
-        className="self-start rounded bg-neutral-900 px-3 py-1.5 text-xs text-white disabled:opacity-40"
+        className="self-start rounded-lg bg-neutral-900 px-3.5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
       >
         {isRegenerating ? "Regenerating..." : "Regenerate with selected sources"}
       </button>
