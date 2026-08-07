@@ -3,11 +3,14 @@ import { ClaimVerificationPanel } from "@/components/ClaimVerificationPanel";
 import { ConfidenceEvolutionChart } from "@/components/ConfidenceEvolutionChart";
 import { ContradictionPanel } from "@/components/ContradictionPanel";
 import { DemoModeBar } from "@/components/DemoModeBar";
+import { KnowledgeUploadPanel } from "@/components/KnowledgeUploadPanel";
 import { QueryComposer } from "@/components/QueryComposer";
+import { QueryUnderstandingPanel } from "@/components/QueryUnderstandingPanel";
 import { ReasoningTimeline } from "@/components/ReasoningTimeline";
 import { RoutingSummary } from "@/components/RoutingSummary";
 import { SourcesPanel } from "@/components/SourcesPanel";
 import { SplitPane } from "@/components/SplitPane";
+import { TrustCalibrationCoach } from "@/components/TrustCalibrationCoach";
 import { TrustDashboard } from "@/components/TrustDashboard";
 import { TrustSliderControl } from "@/components/TrustSliderControl";
 import { WhyNotPanel } from "@/components/WhyNotPanel";
@@ -25,7 +28,10 @@ function QuestionAndAnswer() {
       <section className="flex flex-col gap-3">
         <QueryComposer />
         <TrustSliderControl />
+        <KnowledgeUploadPanel />
       </section>
+
+      <QueryUnderstandingPanel />
 
       <section aria-label="Routing decision" className="flex flex-col gap-2">
         <SectionHeading>How it's answering</SectionHeading>
@@ -71,6 +77,7 @@ function ReasoningColumn() {
       <section aria-label="Overall trust" className="flex flex-col gap-2">
         <SectionHeading>Overall trust</SectionHeading>
         <TrustDashboard />
+        <TrustCalibrationCoach />
       </section>
     </div>
   );

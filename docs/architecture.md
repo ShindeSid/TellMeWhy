@@ -1,4 +1,4 @@
-# TellMeWhy — Architecture (Milestone 1)
+# TellMeWhy - Architecture (Milestone 1)
 
 ## Vision
 An AI Reasoning Workspace, not a chatbot. Every screen answers one of: *Why trust this? What evidence? What assumptions? How confident? What changed confidence? Should I verify?*
@@ -28,7 +28,7 @@ flowchart LR
 
 | Module | Responsibility | Never Does |
 |---|---|---|
-| KAN Cognitive Router | Predicts complexity, ambiguity, domain, retrieval need, expected confidence, token budget, carbon estimate, routing decision — as structured metadata | Generate answers |
+| KAN Cognitive Router | Predicts complexity, ambiguity, domain, retrieval need, expected confidence, token budget, carbon estimate, routing decision - as structured metadata | Generate answers |
 | Adaptive Routing Engine | Dispatches to small LLM / large LLM / RAG based on KAN output + Trust Slider | Score or verify |
 | Meta Verification Layer | Splits answer into atomic claims, verifies each, attributes sources, detects contradictions, refines confidence | Generate answers |
 | Trust Graph | Central store all subsystems write structured metadata into (SQLite-backed) | Invent data |
@@ -43,7 +43,7 @@ class CognitiveRouter(Protocol):
     def analyze(self, query: QueryInput) -> RoutingDecision: ...
 ```
 
-`RoutingDecision` is a fixed pydantic schema (complexity_score, ambiguity_score, domain, needs_retrieval, needs_clarification, expected_confidence, token_budget, carbon_estimate_g, route). Any implementation (heuristic, small model, actual KAN network) can be swapped behind this interface without touching the router, API, or frontend — enforced by the pydantic contract, not convention.
+`RoutingDecision` is a fixed pydantic schema (complexity_score, ambiguity_score, domain, needs_retrieval, needs_clarification, expected_confidence, token_budget, carbon_estimate_g, route). Any implementation (heuristic, small model, actual KAN network) can be swapped behind this interface without touching the router, API, or frontend - enforced by the pydantic contract, not convention.
 
 ## Backend Folder Structure
 
@@ -101,7 +101,7 @@ frontend/
     components/
       QueryComposer.tsx      # F1
       TrustSliderControl.tsx # F9
-      RoutingSummary.tsx     # F10 (basic — full graph viz in Milestone 5)
+      RoutingSummary.tsx     # F10 (basic - full graph viz in Milestone 5)
       AnswerPanel.tsx
     lib/
       api.ts                 # Typed fetch client against the FastAPI backend
@@ -109,7 +109,7 @@ frontend/
       api.ts                 # Mirrors backend/app/models/schemas.py
     store/
       useWorkspaceStore.ts    # zustand: query lifecycle state machine
-    hooks/                   # (empty — populated as needed from Milestone 5 on)
+    hooks/                   # (empty - populated as needed from Milestone 5 on)
   index.html
   vite.config.ts
   package.json
@@ -118,15 +118,15 @@ frontend/
   .env.example
 ```
 
-Plain React (Vite) — not Next.js. No SSR/routing framework needed for a single-workspace hackathon app.
+Plain React (Vite) - not Next.js. No SSR/routing framework needed for a single-workspace hackathon app.
 
-## Database Schema (SQLite — Trust Graph)
+## Database Schema (SQLite - Trust Graph)
 
 See [backend/app/db/schema.sql](../backend/app/db/schema.sql).
 
 Tables: `queries`, `routing_decisions`, `reasoning_steps`, `sources`, `claims`, `trust_scores`, `confidence_events`, `knowledge_graph_nodes`, `knowledge_graph_edges`.
 
-Vector storage (embeddings for RAG) lives in ChromaDB, separate from SQLite — SQLite holds structured metadata/relations only.
+Vector storage (embeddings for RAG) lives in ChromaDB, separate from SQLite - SQLite holds structured metadata/relations only.
 
 ## Next Steps (Milestone 2)
 FastAPI app skeleton, DB engine wiring, first API endpoints (`POST /query`, `GET /trust/{query_id}`), request/response schemas.

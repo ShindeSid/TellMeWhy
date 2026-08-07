@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS queries (
     raw_text TEXT NOT NULL,
     intent_summary TEXT,               -- "I believe you are asking..."
     domain TEXT,
+    entities TEXT,                     -- JSON array of strings (Query Understanding Panel)
+    missing_information TEXT,          -- JSON array of strings
+    alternative_interpretations TEXT,  -- JSON array of strings
     trust_slider_value REAL NOT NULL DEFAULT 0.5, -- 0 = fast, 1 = reliable
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -129,6 +132,18 @@ CREATE TABLE IF NOT EXISTS knowledge_graph_edges (
     source_node_id TEXT NOT NULL REFERENCES knowledge_graph_nodes(id) ON DELETE CASCADE,
     target_node_id TEXT NOT NULL REFERENCES knowledge_graph_nodes(id) ON DELETE CASCADE,
     relation TEXT NOT NULL
+);
+
+-- User-uploaded knowledge (Feature 3): files/URLs/text a user adds become
+-- part of the shared ChromaDB "sources" collection so future RAG queries
+-- can retrieve them. This table is just the human-readable manifest.
+CREATE TABLE IF NOT EXISTS knowledge_items (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    source_type TEXT NOT NULL CHECK (source_type IN ('file','url','text')),
+    origin TEXT,                       -- filename or URL
+    chunk_count INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_answers_query ON answers(query_id);

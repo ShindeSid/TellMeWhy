@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import claims, demo, query, reasoning, sources, trust
+from app.api.routes import claims, demo, knowledge, query, reasoning, sources, trust
 from app.core.config import get_settings
 from app.db.database import init_db
 
@@ -32,6 +32,7 @@ app.include_router(claims.router)
 app.include_router(trust.router)
 app.include_router(sources.router)
 app.include_router(demo.router)
+app.include_router(knowledge.router)
 
 
 @app.get("/health")

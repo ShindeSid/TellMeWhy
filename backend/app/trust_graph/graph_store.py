@@ -12,6 +12,7 @@ reasoning trace / claims / trust score under the next generation_number, so
 support compare-versions / replay-timeline in the sandbox.
 """
 
+import json
 import uuid
 
 from app.db.database import get_connection
@@ -20,6 +21,7 @@ from app.trust_graph.schema import (
     AnswerRecord,
     ClaimRecord,
     ConfidenceEventRecord,
+    KnowledgeItemRecord,
     QueryRecord,
     ReasoningStepRecord,
     RoutingDecisionRecord,
@@ -66,6 +68,29 @@ async def update_query_understanding(
         await conn.execute(
             "UPDATE queries SET intent_summary = ?, domain = ? WHERE id = ?",
             (intent_summary, domain, query_id),
+        )
+        await conn.commit()
+    finally:
+        await conn.close()
+
+
+async def update_query_analysis(
+    query_id: str,
+    entities: list[str],
+    missing_information: list[str],
+    alternative_interpretations: list[str],
+) -> None:
+    conn = await get_connection()
+    try:
+        await conn.execute(
+            "UPDATE queries SET entities = ?, missing_information = ?, "
+            "alternative_interpretations = ? WHERE id = ?",
+            (
+                json.dumps(entities),
+                json.dumps(missing_information),
+                json.dumps(alternative_interpretations),
+                query_id,
+            ),
         )
         await conn.commit()
     finally:
@@ -386,6 +411,16 @@ async def save_claim(
     return ClaimRecord(**dict(row))
 
 
+async def get_claim(claim_id: str) -> ClaimRecord | None:
+    conn = await get_connection()
+    try:
+        cursor = await conn.execute("SELECT * FROM claims WHERE id = ?", (claim_id,))
+        row = await cursor.fetchone()
+    finally:
+        await conn.close()
+    return ClaimRecord(**dict(row)) if row else None
+
+
 async def list_claims(query_id: str, generation_number: int | None = None) -> list[ClaimRecord]:
     conn = await get_connection()
     try:
@@ -458,3 +493,30 @@ async def get_trust_score(
     finally:
         await conn.close()
     return TrustScoreRecord(**dict(row)) if row else None
+
+
+async def create_knowledge_item(
+    title: str, source_type: str, origin: str | None, chunk_count: int
+) -> str:
+    item_id = new_id()
+    conn = await get_connection()
+    try:
+        await conn.execute(
+            "INSERT INTO knowledge_items (id, title, source_type, origin, chunk_count) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (item_id, title, source_type, origin, chunk_count),
+        )
+        await conn.commit()
+    finally:
+        await conn.close()
+    return item_id
+
+
+async def list_knowledge_items() -> list[KnowledgeItemRecord]:
+    conn = await get_connection()
+    try:
+        cursor = await conn.execute("SELECT * FROM knowledge_items ORDER BY created_at DESC")
+        rows = await cursor.fetchall()
+    finally:
+        await conn.close()
+    return [KnowledgeItemRecord(**dict(row)) for row in rows]

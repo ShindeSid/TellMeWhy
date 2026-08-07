@@ -8,6 +8,9 @@ class QueryRecord(BaseModel):
     raw_text: str
     intent_summary: str | None = None
     domain: str | None = None
+    entities: str | None = None                    # JSON-encoded list[str]
+    missing_information: str | None = None          # JSON-encoded list[str]
+    alternative_interpretations: str | None = None   # JSON-encoded list[str]
     trust_slider_value: float
     created_at: str
 
@@ -96,4 +99,13 @@ class TrustScoreRecord(BaseModel):
     freshness_score: float | None
     reasoning_depth_score: float | None
     plain_english_summary: str | None
+    created_at: str
+
+
+class KnowledgeItemRecord(BaseModel):
+    id: str
+    title: str
+    source_type: str
+    origin: str | None
+    chunk_count: int
     created_at: str

@@ -56,25 +56,41 @@ class AdaptiveRoutingEngine:
         return GenerationResult(answer_text=answer, context_used=None)
 
     async def regenerate_with_sources(
-        self, query_text: str, decision: RoutingDecisionRecord, source_texts: list[str]
+        self,
+        query_text: str,
+        decision: RoutingDecisionRecord,
+        source_texts: list[str],
+        extra_instruction: str | None = None,
     ) -> GenerationResult:
         if decision.route != "rag":
-            return await self.execute(query_text, decision)
+            answer = await self._llm.generate(
+                self._augment_prompt(query_text, extra_instruction), large=decision.route == "large_llm"
+            )
+            return GenerationResult(answer_text=answer, context_used=None)
 
         context = (
             self._join_chunk_texts(source_texts)
             if source_texts
             else "(no sources are currently enabled - say the answer cannot be grounded in evidence)"
         )
-        answer = await self._generate_with_context(query_text, context)
+        answer = await self._generate_with_context(query_text, context, extra_instruction)
         return GenerationResult(answer_text=answer, context_used=context)
 
-    async def _generate_with_context(self, query_text: str, context: str) -> str:
+    def _augment_prompt(self, query_text: str, extra_instruction: str | None) -> str:
+        if not extra_instruction:
+            return query_text
+        return f"{query_text}\n\n{extra_instruction}"
+
+    async def _generate_with_context(
+        self, query_text: str, context: str, extra_instruction: str | None = None
+    ) -> str:
         prompt = (
             f"Context:\n{context}\n\n"
             f"Question: {query_text}\n\n"
             "Answer using only the context above. If the context is insufficient, say so."
         )
+        if extra_instruction:
+            prompt = f"{prompt}\n\n{extra_instruction}"
         return await self._llm.generate(prompt, large=True)
 
     def _join_chunks(self, chunks: list[RetrievedChunk]) -> str:

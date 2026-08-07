@@ -23,6 +23,7 @@ class DemoScenario(BaseModel):
     trust_slider_value: float
     chunks: list[DemoChunk] | None  # None => non-RAG route
     canned_answer: str
+    understanding: dict | None = None  # canned Query Understanding Panel data
 
 
 SCENARIOS: list[DemoScenario] = [
@@ -50,6 +51,14 @@ SCENARIOS: list[DemoScenario] = [
             "stomach irritation, and avoid it if you have certain kidney conditions or are in late "
             "pregnancy. Consult a doctor for persistent pain."
         ),
+        understanding={
+            "intent_summary": "asking what dose of ibuprofen is safe for an adult with mild pain",
+            "entities": ["ibuprofen", "dosage", "adult patients", "mild pain"],
+            "missing_information": ["Your weight or any existing kidney/liver conditions"],
+            "alternative_interpretations": [
+                "Could also mean prescription-strength dosing rather than over-the-counter",
+            ],
+        },
     ),
     DemoScenario(
         id="programming",
@@ -64,6 +73,12 @@ SCENARIOS: list[DemoScenario] = [
             "elements one by one and runs in O(n) time, so binary search wins decisively on large "
             "sorted arrays but requires the array to be sorted first."
         ),
+        understanding={
+            "intent_summary": "asking how binary search works and why it beats linear search",
+            "entities": ["binary search", "linear search", "sorted arrays", "time complexity"],
+            "missing_information": [],
+            "alternative_interpretations": [],
+        },
     ),
     DemoScenario(
         id="current_affairs",
@@ -91,6 +106,14 @@ SCENARIOS: list[DemoScenario] = [
             "emissions rules. Negotiators have already reached a binding global agreement on all "
             "three issues. Talks remain ongoing as of the latest sessions."
         ),
+        understanding={
+            "intent_summary": "asking what economic policies are being negotiated in current global trade talks",
+            "entities": ["economic policies", "global trade negotiations", "tariffs"],
+            "missing_information": ["Which countries or trade bloc you're asking about"],
+            "alternative_interpretations": [
+                "Could mean domestic economic policy rather than international trade negotiations",
+            ],
+        },
     ),
 ]
 

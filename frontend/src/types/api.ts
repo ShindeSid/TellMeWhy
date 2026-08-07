@@ -20,10 +20,18 @@ export interface RoutingDecision {
   created_at: string;
 }
 
+export interface QueryUnderstanding {
+  intent_summary: string;
+  entities: string[];
+  missing_information: string[];
+  alternative_interpretations: string[];
+}
+
 export interface QueryCreateResponse {
   query_id: string;
   raw_text: string;
   routing_decision: RoutingDecision;
+  understanding: QueryUnderstanding;
 }
 
 export interface QueryDetailResponse {
@@ -31,6 +39,9 @@ export interface QueryDetailResponse {
   raw_text: string;
   intent_summary: string | null;
   domain: string | null;
+  entities: string[];
+  missing_information: string[];
+  alternative_interpretations: string[];
   trust_slider_value: number;
   routing_decision: RoutingDecision | null;
 }
@@ -153,4 +164,30 @@ export interface DemoScenarioSummary {
 
 export interface DemoScenarioListResponse {
   scenarios: DemoScenarioSummary[];
+}
+
+export interface SimplifyResponse {
+  claim_id: string;
+  original_text: string;
+  simplified_text: string;
+}
+
+export type KnowledgeSourceType = "file" | "url" | "text";
+
+export interface KnowledgeItem {
+  id: string;
+  title: string;
+  source_type: KnowledgeSourceType;
+  origin: string | null;
+  chunk_count: number;
+  created_at: string;
+}
+
+export interface KnowledgeUploadResponse {
+  item: KnowledgeItem;
+  chunk_count: number;
+}
+
+export interface KnowledgeListResponse {
+  items: KnowledgeItem[];
 }

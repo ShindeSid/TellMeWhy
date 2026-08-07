@@ -3,9 +3,12 @@ import type {
   ClaimListResponse,
   DemoScenarioListResponse,
   GenerationListResponse,
+  KnowledgeListResponse,
+  KnowledgeUploadResponse,
   QueryCreateResponse,
   QueryDetailResponse,
   ReasoningTimelineResponse,
+  SimplifyResponse,
   SourceListResponse,
   SourceRecord,
   TrustDashboardResponse,
@@ -24,7 +27,7 @@ export class ApiRequestError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers: init?.body instanceof FormData ? undefined : { "Content-Type": "application/json" },
     ...init,
   });
 
@@ -63,6 +66,14 @@ export function regenerateAnswer(queryId: string): Promise<AnswerResponse> {
   return request(`/api/queries/${queryId}/regenerate`, { method: "POST" });
 }
 
+export function improveClaim(queryId: string, claimId: string): Promise<AnswerResponse> {
+  return request(`/api/queries/${queryId}/claims/${claimId}/improve`, { method: "POST" });
+}
+
+export function simplifyClaim(claimId: string): Promise<SimplifyResponse> {
+  return request(`/api/claims/${claimId}/simplify`, { method: "POST" });
+}
+
 export function listGenerations(queryId: string): Promise<GenerationListResponse> {
   return request(`/api/queries/${queryId}/generations`);
 }
@@ -96,4 +107,27 @@ export function listDemoScenarios(): Promise<DemoScenarioListResponse> {
 
 export function runDemoScenario(scenarioId: string): Promise<AnswerResponse> {
   return request(`/api/demo/scenarios/${scenarioId}/run`, { method: "POST" });
+}
+
+export function listKnowledge(): Promise<KnowledgeListResponse> {
+  return request("/api/knowledge");
+}
+
+export function uploadKnowledgeFile(file: File): Promise<KnowledgeUploadResponse> {
+  const form = new FormData();
+  form.append("file", file);
+  return request("/api/knowledge/upload-file", { method: "POST", body: form });
+}
+
+export function uploadKnowledgeUrl(url: string): Promise<KnowledgeUploadResponse> {
+  const form = new FormData();
+  form.append("url", url);
+  return request("/api/knowledge/upload-url", { method: "POST", body: form });
+}
+
+export function uploadKnowledgeText(text: string, title?: string): Promise<KnowledgeUploadResponse> {
+  return request("/api/knowledge/upload-text", {
+    method: "POST",
+    body: JSON.stringify({ text, title }),
+  });
 }
