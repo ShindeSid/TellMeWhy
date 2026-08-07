@@ -9,7 +9,7 @@ export function ContradictionPanel() {
 
   const findings = useMemo(() => findContradictions(sources), [sources]);
 
-  if (status !== "ready" || sources.length < 2) return null;
+  if ((status !== "ready" && status !== "generating") || sources.length < 2) return null;
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">

@@ -84,3 +84,22 @@ async def ingest_text(title: str, source_type: str, origin: str | None, text: st
     metadatas = [{"title": title, "source": origin or title, "knowledge_item_id": item_id} for _ in chunks]
     collection.add(documents=chunks, ids=ids, metadatas=metadatas)
     return len(chunks)
+
+
+async def delete_knowledge_item(item_id: str) -> None:
+    """Feature 5: removes an uploaded source's chunks from the vector store
+    (so it stops being retrievable) and its manifest row. Uses the same
+    knowledge_item_id metadata tag written at ingest time."""
+    item = await graph_store.get_knowledge_item(item_id)
+    if not item:
+        raise IngestionError("Knowledge item not found")
+
+    try:
+        from app.db.chroma_client import get_sources_collection
+
+        collection = get_sources_collection()
+        collection.delete(where={"knowledge_item_id": item_id})
+    except ImportError:
+        pass  # nothing to clean up in the vector store if chromadb isn't installed
+
+    await graph_store.delete_knowledge_item(item_id)

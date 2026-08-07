@@ -5,7 +5,7 @@ export function ClaimVerificationPanel() {
   const claims = useWorkspaceStore((s) => s.claims);
   const status = useWorkspaceStore((s) => s.status);
 
-  if (status !== "ready" || claims.length === 0) return null;
+  if ((status !== "ready" && status !== "generating") || claims.length === 0) return null;
 
   const verifiedCount = claims.filter((c) => c.status === "verified").length;
 

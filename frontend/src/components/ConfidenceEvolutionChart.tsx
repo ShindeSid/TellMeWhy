@@ -15,7 +15,7 @@ export function ConfidenceEvolutionChart() {
   const steps = useWorkspaceStore((s) => s.reasoningSteps);
   const status = useWorkspaceStore((s) => s.status);
 
-  if (status !== "ready" || steps.length === 0) return null;
+  if ((status !== "ready" && status !== "generating") || steps.length === 0) return null;
 
   const data = steps
     .filter((s) => s.confidence !== null)

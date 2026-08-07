@@ -191,3 +191,13 @@ export interface KnowledgeUploadResponse {
 export interface KnowledgeListResponse {
   items: KnowledgeItem[];
 }
+
+export interface AuthUser {
+  id: string;
+  email: string;
+}
+
+export interface AuthResponse {
+  user: AuthUser;
+  token: string;
+}

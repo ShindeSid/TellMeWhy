@@ -1,3 +1,5 @@
+import { motion, useReducedMotion } from "framer-motion";
+
 import { formatPercent } from "@/lib/format";
 import { useWorkspaceStore } from "@/store/useWorkspaceStore";
 
@@ -18,11 +20,12 @@ function TrustGauge({ value }: { value: number }) {
   const radius = 34;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - value);
+  const reduceMotion = useReducedMotion();
 
   return (
     <svg width="88" height="88" viewBox="0 0 88 88" className="shrink-0" role="img" aria-label={`Overall trust ${pct} percent`}>
       <circle cx="44" cy="44" r={radius} fill="none" stroke="#e5e5e5" strokeWidth="8" />
-      <circle
+      <motion.circle
         cx="44"
         cy="44"
         r={radius}
@@ -31,7 +34,9 @@ function TrustGauge({ value }: { value: number }) {
         strokeWidth="8"
         strokeLinecap="round"
         strokeDasharray={circumference}
-        strokeDashoffset={offset}
+        initial={reduceMotion ? false : { strokeDashoffset: circumference }}
+        animate={{ strokeDashoffset: offset }}
+        transition={reduceMotion ? { duration: 0 } : { duration: 0.6, ease: "easeOut" }}
         transform="rotate(-90 44 44)"
       />
       <text x="44" y="49" textAnchor="middle" fontSize="18" fontWeight="600" fill="#171717">
@@ -44,8 +49,9 @@ function TrustGauge({ value }: { value: number }) {
 export function TrustDashboard() {
   const trustScore = useWorkspaceStore((s) => s.trustScore);
   const status = useWorkspaceStore((s) => s.status);
+  const confidenceRecovery = useWorkspaceStore((s) => s.confidenceRecovery);
 
-  if (status !== "ready") return null;
+  if (status !== "ready" && status !== "generating") return null;
 
   if (!trustScore) {
     return (
@@ -64,6 +70,16 @@ export function TrustDashboard() {
           {trustScore.plain_english_summary}
         </p>
       </div>
+
+      {confidenceRecovery && (
+        <div className="flex items-center gap-2 rounded-lg bg-trust-high/10 px-3 py-2 text-sm text-trust-high">
+          <span aria-hidden="true">✓</span>
+          <span className="font-medium">
+            Confidence recovered +{formatPercent(confidenceRecovery.delta)}
+          </span>
+          <span className="text-xs text-trust-high/80">- {confidenceRecovery.reason}</span>
+        </div>
+      )}
       <dl className="grid grid-cols-3 gap-2 text-center text-xs text-neutral-500">
         <div className="rounded-lg bg-neutral-50 p-2">
           <dt>Fact-checked</dt>

@@ -26,7 +26,7 @@ export function ReasoningTimeline() {
   const status = useWorkspaceStore((s) => s.status);
   const reduceMotion = useReducedMotion();
 
-  if (status !== "ready" || steps.length === 0) return null;
+  if ((status !== "ready" && status !== "generating") || steps.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">

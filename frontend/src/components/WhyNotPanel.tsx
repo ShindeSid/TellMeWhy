@@ -7,7 +7,7 @@ export function WhyNotPanel() {
   const decision = useWorkspaceStore((s) => s.routingDecision);
   const trustSliderValue = useWorkspaceStore((s) => s.trustSliderValue);
 
-  if (status !== "ready" || !trustScore) return null;
+  if ((status !== "ready" && status !== "generating") || !trustScore) return null;
   if (trustScore.overall_trust >= 0.95) return null;
 
   const reasons: string[] = [];

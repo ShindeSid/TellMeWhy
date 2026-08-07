@@ -17,6 +17,7 @@ export function KnowledgeUploadPanel() {
   const uploadFile = useWorkspaceStore((s) => s.uploadFile);
   const uploadUrl = useWorkspaceStore((s) => s.uploadUrl);
   const uploadText = useWorkspaceStore((s) => s.uploadText);
+  const deleteKnowledgeItem = useWorkspaceStore((s) => s.deleteKnowledgeItem);
 
   useEffect(() => {
     void fetchKnowledge();
@@ -125,6 +126,15 @@ export function KnowledgeUploadPanel() {
                   <span aria-hidden="true">{SOURCE_TYPE_ICON[item.source_type] ?? "📄"}</span>
                   <span className="min-w-0 flex-1 truncate">{item.title}</span>
                   <span className="shrink-0 text-neutral-400">{item.chunk_count} chunk{item.chunk_count === 1 ? "" : "s"}</span>
+                  <button
+                    type="button"
+                    onClick={() => void deleteKnowledgeItem(item.id)}
+                    aria-label={`Remove ${item.title}`}
+                    title="Remove this source"
+                    className="shrink-0 rounded text-neutral-400 hover:bg-red-50 hover:text-red-600"
+                  >
+                    ✕
+                  </button>
                 </li>
               ))}
             </ul>

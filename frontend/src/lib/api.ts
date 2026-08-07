@@ -1,5 +1,7 @@
 import type {
   AnswerResponse,
+  AuthResponse,
+  AuthUser,
   ClaimListResponse,
   DemoScenarioListResponse,
   GenerationListResponse,
@@ -25,15 +27,28 @@ export class ApiRequestError extends Error {
   }
 }
 
+let authToken: string | null = null;
+
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = init?.body instanceof FormData ? {} : { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
   const response = await fetch(`${BASE_URL}${path}`, {
-    headers: init?.body instanceof FormData ? undefined : { "Content-Type": "application/json" },
+    headers,
     ...init,
   });
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({ detail: response.statusText }));
     throw new ApiRequestError(response.status, body.detail ?? response.statusText);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return response.json() as Promise<T>;
@@ -60,6 +75,30 @@ export function getQuery(queryId: string): Promise<QueryDetailResponse> {
 
 export function generateAnswer(queryId: string): Promise<AnswerResponse> {
   return request(`/api/queries/${queryId}/answer`, { method: "POST" });
+}
+
+export type RunMode = "answer" | "regenerate" | "improve";
+
+export function startRun(
+  queryId: string,
+  mode: RunMode = "answer",
+  claimId?: string
+): Promise<{ run_id: string }> {
+  return request(`/api/queries/${queryId}/runs`, {
+    method: "POST",
+    body: JSON.stringify({ mode, claim_id: claimId ?? null }),
+  });
+}
+
+export function runEventsUrl(runId: string): string {
+  return `${BASE_URL}/api/runs/${runId}/events`;
+}
+
+export function resumeRun(runId: string, sourceAdded: boolean): Promise<{ status: string }> {
+  return request(`/api/runs/${runId}/resume`, {
+    method: "POST",
+    body: JSON.stringify({ source_added: sourceAdded }),
+  });
 }
 
 export function regenerateAnswer(queryId: string): Promise<AnswerResponse> {
@@ -130,4 +169,24 @@ export function uploadKnowledgeText(text: string, title?: string): Promise<Knowl
     method: "POST",
     body: JSON.stringify({ text, title }),
   });
+}
+
+export function deleteKnowledgeItem(itemId: string): Promise<void> {
+  return request(`/api/knowledge/${itemId}`, { method: "DELETE" });
+}
+
+export function signup(email: string, password: string): Promise<AuthResponse> {
+  return request("/api/auth/signup", { method: "POST", body: JSON.stringify({ email, password }) });
+}
+
+export function login(email: string, password: string): Promise<AuthResponse> {
+  return request("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+}
+
+export function logout(): Promise<void> {
+  return request("/api/auth/logout", { method: "POST" });
+}
+
+export function me(): Promise<AuthUser | null> {
+  return request("/api/auth/me");
 }

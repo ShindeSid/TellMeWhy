@@ -118,7 +118,7 @@ async def generate_answer(query_id: str) -> AnswerResponse:
         )
 
     try:
-        result = await _engine.execute(query.raw_text, decision)
+        result = await _engine.execute(query.raw_text, decision, domain=query.domain)
     except (GeminiUnavailableError, RAGUnavailableError) as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except GoogleAPICallError as exc:

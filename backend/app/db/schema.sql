@@ -134,6 +134,25 @@ CREATE TABLE IF NOT EXISTS knowledge_graph_edges (
     relation TEXT NOT NULL
 );
 
+-- Auth (Feature 8). Hackathon-scope, not production-hardened: bcrypt-hashed
+-- passwords (never plaintext) and opaque random session tokens with an
+-- expiry, but no rate limiting, email verification, or password reset flow.
+-- Login is additive/optional - nothing elsewhere in this schema requires a
+-- user_id, so guest usage is unaffected.
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    token TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    expires_at TEXT NOT NULL
+);
+
 -- User-uploaded knowledge (Feature 3): files/URLs/text a user adds become
 -- part of the shared ChromaDB "sources" collection so future RAG queries
 -- can retrieve them. This table is just the human-readable manifest.

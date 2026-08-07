@@ -176,6 +176,8 @@ export function AnswerPanel() {
   const trustScore = useWorkspaceStore((s) => s.trustScore);
   const hitlAcknowledged = useWorkspaceStore((s) => s.hitlAcknowledged);
   const errorMessage = useWorkspaceStore((s) => s.errorMessage);
+  const liveStage = useWorkspaceStore((s) => s.liveStage);
+  const streamingAnswerText = useWorkspaceStore((s) => s.streamingAnswerText);
 
   if (status === "idle") {
     return (
@@ -195,18 +197,25 @@ export function AnswerPanel() {
   }
 
   if (status === "generating" || status === "routing") {
-    const label = status === "routing" ? "Reading your question..." : "Writing an answer...";
+    const label = liveStage ?? (status === "routing" ? "Reading your question..." : "Writing an answer...");
     return (
-      <div className="rounded-xl border border-neutral-200 p-4" aria-hidden="true">
-        <div className="flex items-center gap-2 text-sm text-neutral-500">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-neutral-400" />
+      <div className="rounded-xl border border-neutral-200 p-4">
+        <div className="flex items-center gap-2 text-sm text-neutral-500" aria-live="polite">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-neutral-400" aria-hidden="true" />
           {label}
         </div>
-        <div className="mt-3 flex flex-col gap-2">
-          <div className="h-3 w-full animate-pulse rounded bg-neutral-200" />
-          <div className="h-3 w-5/6 animate-pulse rounded bg-neutral-200" />
-          <div className="h-3 w-2/3 animate-pulse rounded bg-neutral-200" />
-        </div>
+        {streamingAnswerText ? (
+          <p className="mt-3 whitespace-pre-wrap text-base leading-relaxed">
+            {streamingAnswerText}
+            <span className="inline-block h-4 w-1.5 translate-y-0.5 animate-pulse bg-neutral-400" aria-hidden="true" />
+          </p>
+        ) : (
+          <div className="mt-3 flex flex-col gap-2" aria-hidden="true">
+            <div className="h-3 w-full animate-pulse rounded bg-neutral-200" />
+            <div className="h-3 w-5/6 animate-pulse rounded bg-neutral-200" />
+            <div className="h-3 w-2/3 animate-pulse rounded bg-neutral-200" />
+          </div>
+        )}
       </div>
     );
   }

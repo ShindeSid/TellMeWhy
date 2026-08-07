@@ -520,3 +520,22 @@ async def list_knowledge_items() -> list[KnowledgeItemRecord]:
     finally:
         await conn.close()
     return [KnowledgeItemRecord(**dict(row)) for row in rows]
+
+
+async def get_knowledge_item(item_id: str) -> KnowledgeItemRecord | None:
+    conn = await get_connection()
+    try:
+        cursor = await conn.execute("SELECT * FROM knowledge_items WHERE id = ?", (item_id,))
+        row = await cursor.fetchone()
+    finally:
+        await conn.close()
+    return KnowledgeItemRecord(**dict(row)) if row else None
+
+
+async def delete_knowledge_item(item_id: str) -> None:
+    conn = await get_connection()
+    try:
+        await conn.execute("DELETE FROM knowledge_items WHERE id = ?", (item_id,))
+        await conn.commit()
+    finally:
+        await conn.close()
