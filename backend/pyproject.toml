@@ -1,0 +1,9 @@
+[project]
+name = "tellmewhy-backend"
+version = "0.1.0"
+description = "TellMeWhy — AI Reasoning Workspace backend"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
