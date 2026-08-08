@@ -23,6 +23,7 @@ import { TrustDashboard } from "@/components/TrustDashboard";
 import { TrustSliderControl } from "@/components/TrustSliderControl";
 import { WhyNotPanel } from "@/components/WhyNotPanel";
 import { formatPercent } from "@/lib/format";
+import { renderMarkdownInline } from "@/lib/inlineMarkdown";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useWorkspaceStore } from "@/store/useWorkspaceStore";
 import type { ChatTurn } from "@/store/useWorkspaceStore";
@@ -125,7 +126,7 @@ function HistoryTurn({ turn }: { turn: ChatTurn }) {
           )}
           {turn.answer && (
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
-              {turn.answer.text}
+              {renderMarkdownInline(turn.answer.text, `hist-${turn.id}`)}
             </p>
           )}
           {turn.trustScore && (
@@ -210,10 +211,14 @@ function ReasoningColumn() {
 
   return (
     <div className="flex flex-col gap-4 pb-6">
-      {/* Live reasoning graph — always visible while thinking */}
-      <section aria-label="Reasoning process" className="flex flex-col gap-2">
+      {/* Live reasoning graph + confidence trend — always visible while
+          thinking, both driven off the same streaming reasoningSteps array,
+          so they animate in together instead of appearing only after the
+          answer is done. */}
+      <section aria-label="Reasoning process" className="flex flex-col gap-3">
         <SectionHeading>Watching it think</SectionHeading>
         <GraphOfThought />
+        <ConfidenceEvolutionChart />
       </section>
 
       {/* Answer routing summary */}
@@ -241,7 +246,6 @@ function ReasoningColumn() {
           <section aria-label="Reasoning timeline" className="flex flex-col gap-4">
             <SectionHeading>Reasoning timeline</SectionHeading>
             <ReasoningTimeline />
-            <ConfidenceEvolutionChart />
           </section>
           <section aria-label="Overall trust" className="flex flex-col gap-2">
             <SectionHeading>Overall trust</SectionHeading>

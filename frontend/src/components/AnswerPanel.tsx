@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { IconPause } from "@/components/icons";
 import { useWorkspaceStore } from "@/store/useWorkspaceStore";
 import { STATUS_BG_CLASS, STATUS_ICON, STATUS_LABEL, STATUS_UNDERLINE_CLASS } from "@/lib/claimStatus";
+import { renderMarkdownInline } from "@/lib/inlineMarkdown";
 import type { Claim } from "@/types/api";
 
 const HITL_THRESHOLD = 0.5;
@@ -95,7 +96,7 @@ function HighlightedAnswer({ text, claims }: { text: string; claims: Claim[] }) 
     .sort((a, b) => (a.span_start ?? 0) - (b.span_start ?? 0));
 
   if (spans.length === 0) {
-    return <p className="whitespace-pre-wrap text-base leading-relaxed">{text}</p>;
+    return <p className="whitespace-pre-wrap text-base leading-relaxed">{renderMarkdownInline(text)}</p>;
   }
 
   const pieces: ReactNode[] = [];
@@ -103,7 +104,9 @@ function HighlightedAnswer({ text, claims }: { text: string; claims: Claim[] }) 
   spans.forEach((claim, i) => {
     const start = claim.span_start ?? 0;
     const end = claim.span_end ?? 0;
-    if (start > cursor) pieces.push(<span key={`gap-${i}`}>{text.slice(cursor, start)}</span>);
+    if (start > cursor) {
+      pieces.push(<span key={`gap-${i}`}>{renderMarkdownInline(text.slice(cursor, start), `gap-${i}`)}</span>);
+    }
     pieces.push(
       <span key={claim.id} className="relative inline">
         <mark
@@ -120,14 +123,16 @@ function HighlightedAnswer({ text, claims }: { text: string; claims: Claim[] }) 
           }}
           className={`cursor-pointer rounded px-0.5 underline decoration-2 underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 ${STATUS_BG_CLASS[claim.status]} ${STATUS_UNDERLINE_CLASS[claim.status]}`}
         >
-          {text.slice(start, end)}
+          {renderMarkdownInline(text.slice(start, end), `mark-${claim.id}`)}
         </mark>
         {openClaimId === claim.id && <ClaimPopover claim={claim} />}
       </span>
     );
     cursor = Math.max(cursor, end);
   });
-  if (cursor < text.length) pieces.push(<span key="tail">{text.slice(cursor)}</span>);
+  if (cursor < text.length) {
+    pieces.push(<span key="tail">{renderMarkdownInline(text.slice(cursor), "tail")}</span>);
+  }
 
   return <p className="whitespace-pre-wrap text-base leading-relaxed">{pieces}</p>;
 }
@@ -211,7 +216,7 @@ export function AnswerPanel() {
   if (status === "idle") {
     return (
       <p className="rounded-xl border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-400 dark:text-neutral-500">
-        Ask a question above, or try one of the demo scenarios, to get started.
+        Ask a question above to get started.
       </p>
     );
   }
@@ -235,7 +240,7 @@ export function AnswerPanel() {
         </div>
         {streamingAnswerText ? (
           <p className="mt-3 whitespace-pre-wrap text-base leading-relaxed">
-            {streamingAnswerText}
+            {renderMarkdownInline(streamingAnswerText, "stream")}
             <span className="inline-block h-4 w-1.5 translate-y-0.5 animate-pulse bg-neutral-400" aria-hidden="true" />
           </p>
         ) : (
