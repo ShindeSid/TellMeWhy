@@ -130,8 +130,3 @@ Vector storage (embeddings for RAG) lives in ChromaDB, separate from SQLite - SQ
 
 ## Next Steps (Milestone 2)
 FastAPI app skeleton, DB engine wiring, first API endpoints (`POST /query`, `GET /trust/{query_id}`), request/response schemas.
-
-Note - 
-Find the user persona for this project. We can't make it for everyone. Tailor it according to the following viewpoint.
-Show animations/images/ or some other thing that is interactive. 
-Understand the demographic and how it should be displyed. Think from user perspective.
