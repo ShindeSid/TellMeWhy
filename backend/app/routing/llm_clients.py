@@ -11,6 +11,26 @@ class GeminiUnavailableError(RuntimeError):
     """Raised when GEMINI_API_KEY is not configured."""
 
 
+def _safe_response_text(response) -> str:
+    """response.text raises ValueError when a candidate has no valid Part -
+    happens when max_output_tokens is hit before any visible text was
+    produced (e.g. all of it spent on the model's internal "thinking"), which
+    would otherwise crash the whole request over what's really just an empty
+    chunk/response. Falls back to manually walking candidates/parts, which is
+    more lenient than the quick accessor."""
+    try:
+        return response.text
+    except ValueError:
+        pieces: list[str] = []
+        for candidate in getattr(response, "candidates", None) or []:
+            content = getattr(candidate, "content", None)
+            for part in getattr(content, "parts", None) or []:
+                text = getattr(part, "text", None)
+                if text:
+                    pieces.append(text)
+        return "".join(pieces)
+
+
 class GeminiClient:
     def __init__(self) -> None:
         settings = get_settings()
@@ -28,14 +48,17 @@ class GeminiClient:
             genai.configure(api_key=self._api_key)
             self._configured = True
 
-    async def generate(self, prompt: str, *, large: bool) -> str:
+    async def generate(self, prompt: str, *, large: bool, max_output_tokens: int | None = None) -> str:
         self._ensure_configured()
         model_name = self._large_model_name if large else self._small_model_name
         model = genai.GenerativeModel(model_name)
-        response = await asyncio.to_thread(model.generate_content, prompt)
-        return response.text
+        config = genai.GenerationConfig(max_output_tokens=max_output_tokens) if max_output_tokens else None
+        response = await asyncio.to_thread(model.generate_content, prompt, generation_config=config)
+        return _safe_response_text(response)
 
-    async def generate_stream(self, prompt: str, *, large: bool) -> AsyncIterator[str]:
+    async def generate_stream(
+        self, prompt: str, *, large: bool, max_output_tokens: int | None = None
+    ) -> AsyncIterator[str]:
         """Real token/chunk-level streaming via the Gemini SDK's stream=True.
         The SDK's stream is a blocking sync iterator, so it's driven from a
         background thread and bridged into an asyncio queue rather than
@@ -43,15 +66,17 @@ class GeminiClient:
         self._ensure_configured()
         model_name = self._large_model_name if large else self._small_model_name
         model = genai.GenerativeModel(model_name)
+        config = genai.GenerationConfig(max_output_tokens=max_output_tokens) if max_output_tokens else None
 
         loop = asyncio.get_event_loop()
         queue: asyncio.Queue[str | None | Exception] = asyncio.Queue()
 
         def _run() -> None:
             try:
-                for chunk in model.generate_content(prompt, stream=True):
-                    if chunk.text:
-                        loop.call_soon_threadsafe(queue.put_nowait, chunk.text)
+                for chunk in model.generate_content(prompt, stream=True, generation_config=config):
+                    text = _safe_response_text(chunk)
+                    if text:
+                        loop.call_soon_threadsafe(queue.put_nowait, text)
             except Exception as exc:  # noqa: BLE001 - surfaced to the async side below
                 loop.call_soon_threadsafe(queue.put_nowait, exc)
             finally:

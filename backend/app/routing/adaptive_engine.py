@@ -17,6 +17,32 @@ from app.routing.llm_clients import GeminiClient
 from app.trust_graph.schema import RoutingDecisionRecord
 
 
+_STYLE_INSTRUCTION = (
+    "STRICT LENGTH LIMIT: keep your entire answer to at most 120 words (roughly 10-15 short lines). "
+    "This is a hard constraint you must not exceed, even for broad or complex topics. For a broad "
+    "conceptual question (e.g. 'What is X?'), that means ONLY a 2-4 sentence plain-language definition "
+    "plus at most 2 short bullet points if truly needed - do NOT write a multi-section explainer "
+    "covering history, multiple theories/models, sub-mechanisms, or a list of implications, even "
+    "though you could. Pick the single most useful framing and stop there; the user can ask a "
+    "follow-up if they want more depth. Write in short plain-prose paragraphs. Do not use headers (no "
+    "# or ##), horizontal rules (no ---), tables, or LaTeX/math notation (no $$, no \\text{}). You may "
+    "use **bold** for a couple of key terms and *italics* sparingly, but do not overuse markdown or "
+    "add unnecessary structure."
+)
+
+# Runaway-cost safety net only, NOT a length-enforcement mechanism - the
+# 120-word target above is enforced by the prompt instruction alone. A tight
+# token cap was tried and reverted: gemini-2.5-flash spends an unpredictable,
+# per-call-variable slice of max_output_tokens on internal "thinking" before
+# any visible answer text, and this SDK version (google-generativeai 0.8.3)
+# has no way to disable or budget that separately. The same prompt measured
+# anywhere from 9 to 553 output tokens depending on how much thinking it did,
+# so a tight cap risked silently truncating answers mid-sentence. 1500 is
+# high enough to essentially never clip a compliant answer, while still
+# bounding the worst case (an early, uninstructed test ran to ~1200 tokens).
+_MAX_ANSWER_TOKENS = 1500
+
+
 class RAGUnavailableError(RuntimeError):
     """Raised when the vector store (ChromaDB) isn't available in this environment."""
 
@@ -56,7 +82,8 @@ class AdaptiveRoutingEngine:
         """Public wrapper for the non-RAG generation call, so the streaming
         pipeline (app/streaming/pipeline.py) can trigger it without reaching
         into the private _llm attribute."""
-        return await self._llm.generate(query_text, large=large)
+        prompt = f"{_STYLE_INSTRUCTION}\n\nQuestion: {query_text}"
+        return await self._llm.generate(prompt, large=large, max_output_tokens=_MAX_ANSWER_TOKENS)
 
     async def regenerate_with_sources(
         self,
@@ -66,8 +93,9 @@ class AdaptiveRoutingEngine:
         extra_instruction: str | None = None,
     ) -> GenerationResult:
         if decision.route != "rag":
+            prompt = f"{_STYLE_INSTRUCTION}\n\nQuestion: {self._augment_prompt(query_text, extra_instruction)}"
             answer = await self._llm.generate(
-                self._augment_prompt(query_text, extra_instruction), large=decision.route == "large_llm"
+                prompt, large=decision.route == "large_llm", max_output_tokens=_MAX_ANSWER_TOKENS
             )
             return GenerationResult(answer_text=answer, context_used=None)
 
@@ -88,29 +116,32 @@ class AdaptiveRoutingEngine:
         self, query_text: str, context: str, extra_instruction: str | None = None
     ) -> str:
         prompt = (
+            f"{_STYLE_INSTRUCTION}\n\n"
             f"Context:\n{context}\n\n"
             f"Question: {query_text}\n\n"
             "Answer using only the context above. If the context is insufficient, say so."
         )
         if extra_instruction:
             prompt = f"{prompt}\n\n{extra_instruction}"
-        return await self._llm.generate(prompt, large=True)
+        return await self._llm.generate(prompt, large=True, max_output_tokens=_MAX_ANSWER_TOKENS)
 
     async def generate_direct_stream(self, query_text: str, large: bool) -> AsyncIterator[str]:
-        async for chunk in self._llm.generate_stream(query_text, large=large):
+        prompt = f"{_STYLE_INSTRUCTION}\n\nQuestion: {query_text}"
+        async for chunk in self._llm.generate_stream(prompt, large=large, max_output_tokens=_MAX_ANSWER_TOKENS):
             yield chunk
 
     async def generate_with_context_stream(
         self, query_text: str, context: str, extra_instruction: str | None = None
     ) -> AsyncIterator[str]:
         prompt = (
+            f"{_STYLE_INSTRUCTION}\n\n"
             f"Context:\n{context}\n\n"
             f"Question: {query_text}\n\n"
             "Answer using only the context above. If the context is insufficient, say so."
         )
         if extra_instruction:
             prompt = f"{prompt}\n\n{extra_instruction}"
-        async for chunk in self._llm.generate_stream(prompt, large=True):
+        async for chunk in self._llm.generate_stream(prompt, large=True, max_output_tokens=_MAX_ANSWER_TOKENS):
             yield chunk
 
     def join_chunks(self, chunks: list[RetrievedChunk]) -> str:
