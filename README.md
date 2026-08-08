@@ -110,4 +110,4 @@ frontend/src/
   lib/api.ts      typed fetch client
 ```
 ## Work Done
-This project was developed during the "Hackathon For Human-Centred Design of Large Language Model Interfaces on 7th - 8th August 2026" at IIIT Pune ACM SIGCHI Student Chapter in collaboration with IIT Bombay ACM SIGCHI Student Chapter
+This project was developed during the "Hackathon For Human-Centred Design of Large Language Model Interfaces on 7th - 8th August 2026" at IIIT Pune ACM SIGCHI in collaboration with IIT Bombay ACM SIGCHI (Student Chapters)
