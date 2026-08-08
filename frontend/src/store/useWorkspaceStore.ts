@@ -2,16 +2,15 @@ import { create } from "zustand";
 
 import {
   ApiRequestError,
+  claimCounterfactual,
   createQuery,
   getClaims,
-  getQuery,
   getReasoningTimeline,
   getTrustDashboard,
   listGenerations,
   listKnowledge,
   listSources,
   resumeRun as apiResumeRun,
-  runDemoScenario,
   runEventsUrl,
   setSourceEnabled,
   simplifyClaim,
@@ -28,6 +27,7 @@ import type {
   Claim,
   ClaimStatus,
   ConfidenceEvent,
+  DecisionRecord,
   KnowledgeItem,
   QueryUnderstanding,
   ReasoningStep,
@@ -45,6 +45,7 @@ const LIVE_STAGE_LABEL: Record<string, string> = {
   REASONING_COMPLETED: "Draft answer ready...",
   CLAIM_EXTRACTION_STARTED: "Extracting claims...",
   TRUST_UPDATED: "Calculating trust...",
+  DECISION_SYNTHESIZED: "Summarizing the decision...",
   ANSWER_COMPLETED: "Answer completed.",
   RAG_UPDATED: "Re-checking sources...",
 };
@@ -71,9 +72,33 @@ export interface ConfidenceRecoveryInfo {
   reason: string;
 }
 
+// A completed prior exchange, snapshotted once superseded by a new question -
+// this is what makes the workspace a running research session/chat log
+// instead of a single-shot form that forgets everything on the next ask.
+export interface ChatTurn {
+  id: string;
+  queryText: string;
+  understanding: QueryUnderstanding | null;
+  routingDecision: RoutingDecision | null;
+  answer: AnswerRecord | null;
+  decision: DecisionRecord | null;
+  trustScore: TrustScoreRecord | null;
+  claims: Claim[];
+  sources: SourceRecord[];
+  reasoningSteps: ReasoningStep[];
+  confidenceEvents: ConfidenceEvent[];
+  generationCount: number;
+}
+
 interface WorkspaceState {
   queryText: string;
+  // The submitted text of the current/active turn - distinct from queryText
+  // (the live composer draft, cleared right after send) so it survives to be
+  // shown as the user's chat bubble and to be snapshotted into history once
+  // this turn is superseded by the next question.
+  activeQueryText: string | null;
   trustSliderValue: number;
+  history: ChatTurn[];
 
   queryId: string | null;
   activeRunId: string | null;
@@ -81,6 +106,7 @@ interface WorkspaceState {
   understandingDismissed: boolean;
   routingDecision: RoutingDecision | null;
   answer: AnswerRecord | null;
+  decision: DecisionRecord | null;
   streamingAnswerText: string;
   reasoningSteps: ReasoningStep[];
   confidenceEvents: ConfidenceEvent[];
@@ -93,6 +119,8 @@ interface WorkspaceState {
   improvingClaimId: string | null;
   simplifiedClaims: Record<string, string>;
   simplifyingClaimId: string | null;
+  counterfactuals: Record<string, string>;
+  counterfactualClaimId: string | null;
   hitlAcknowledged: boolean;
 
   confidenceDrop: ConfidenceDropInfo | null;
@@ -109,11 +137,11 @@ interface WorkspaceState {
   setQueryText: (text: string) => void;
   setTrustSliderValue: (value: number) => void;
   submitQuery: () => Promise<void>;
-  runDemoScenario: (scenarioId: string) => Promise<void>;
   toggleSource: (sourceId: string, enabled: boolean) => Promise<void>;
   regenerate: () => Promise<void>;
   improveClaim: (claimId: string) => Promise<void>;
   simplifyClaim: (claimId: string) => Promise<void>;
+  fetchCounterfactual: (claimId: string) => Promise<void>;
   resumeRun: (sourceAdded: boolean) => Promise<void>;
   dismissUnderstanding: () => void;
   acknowledgeHitl: () => void;
@@ -139,6 +167,7 @@ async function fetchGenerationArtifacts(queryId: string) {
 function clearResults(): Pick<
   WorkspaceState,
   | "answer"
+  | "decision"
   | "streamingAnswerText"
   | "routingDecision"
   | "queryId"
@@ -152,6 +181,7 @@ function clearResults(): Pick<
   | "sources"
   | "generationCount"
   | "simplifiedClaims"
+  | "counterfactuals"
   | "hitlAcknowledged"
   | "liveStage"
   | "confidenceDrop"
@@ -159,6 +189,7 @@ function clearResults(): Pick<
 > {
   return {
     answer: null,
+    decision: null,
     streamingAnswerText: "",
     routingDecision: null,
     queryId: null,
@@ -172,10 +203,33 @@ function clearResults(): Pick<
     sources: [],
     generationCount: 0,
     simplifiedClaims: {},
+    counterfactuals: {},
     hitlAcknowledged: false,
     liveStage: null,
     confidenceDrop: null,
     confidenceRecovery: null,
+  };
+}
+
+// Called right before a new question replaces the active turn's fields -
+// if the active turn actually finished (has an answer), it's archived into
+// history instead of being silently overwritten, so the workspace reads as
+// a running session rather than a form that forgets the last question.
+function snapshotActiveTurn(state: WorkspaceState): ChatTurn | null {
+  if (!state.queryId || !state.answer || !state.activeQueryText) return null;
+  return {
+    id: state.queryId,
+    queryText: state.activeQueryText,
+    understanding: state.understanding,
+    routingDecision: state.routingDecision,
+    answer: state.answer,
+    decision: state.decision,
+    trustScore: state.trustScore,
+    claims: state.claims,
+    sources: state.sources,
+    reasoningSteps: state.reasoningSteps,
+    confidenceEvents: state.confidenceEvents,
+    generationCount: state.generationCount,
   };
 }
 
@@ -343,6 +397,15 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
           },
         }),
 
+      DECISION_SYNTHESIZED: (data) =>
+        set({
+          decision: {
+            recommendation: data.recommendation as string,
+            confidence_phrase: data.confidence_phrase as string,
+            key_caveat: data.key_caveat as string,
+          },
+        }),
+
       ANSWER_COMPLETED: (data) => {
         set({
           liveStage: LIVE_STAGE_LABEL.ANSWER_COMPLETED,
@@ -399,12 +462,15 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
 
   return {
     queryText: "",
+    activeQueryText: null,
     trustSliderValue: 0.5,
+    history: [],
 
     ...clearResults(),
     isRegenerating: false,
     improvingClaimId: null,
     simplifyingClaimId: null,
+    counterfactualClaimId: null,
     isResuming: false,
 
     knowledgeItems: [],
@@ -418,17 +484,27 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
     setTrustSliderValue: (value) => set({ trustSliderValue: value }),
 
     submitQuery: async () => {
-      const { queryText, trustSliderValue, knowledgeItems } = get();
-      if (!queryText.trim()) return;
+      const state = get();
+      const { trustSliderValue, knowledgeItems } = state;
+      const trimmed = state.queryText.trim();
+      if (!trimmed) return;
 
       closeActiveStream?.();
-      set({ status: "routing", errorMessage: null, ...clearResults() });
+      const priorTurn = snapshotActiveTurn(state);
+      set({
+        status: "routing",
+        errorMessage: null,
+        ...clearResults(),
+        history: priorTurn ? [...state.history, priorTurn] : state.history,
+        activeQueryText: trimmed,
+        queryText: "",
+      });
 
       try {
         // KAN routing + Query Understanding already happen synchronously here
         // and already return fast (no streaming benefit from wrapping this
         // call too) - see docs/architecture.md.
-        const created = await createQuery(queryText, trustSliderValue, knowledgeItems.length > 0);
+        const created = await createQuery(trimmed, trustSliderValue, knowledgeItems.length > 0);
         const queryId = created.query_id;
         set({
           queryId,
@@ -446,43 +522,6 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
           (status) => set({ status }),
           (message) => set({ status: "error", errorMessage: message })
         );
-      } catch (err) {
-        const message = err instanceof ApiRequestError ? err.message : "Unexpected error";
-        set({ status: "error", errorMessage: message });
-      }
-    },
-
-    runDemoScenario: async (scenarioId) => {
-      set({ status: "routing", errorMessage: null, ...clearResults() });
-
-      try {
-        const answered = await runDemoScenario(scenarioId);
-        const queryId = answered.query_id;
-        set({ queryId, status: "generating", queryText: "" });
-
-        const [detail, { timeline, trust, claimsResponse, sourcesResponse, generations }] = await Promise.all([
-          getQuery(queryId),
-          fetchGenerationArtifacts(queryId),
-        ]);
-
-        set({
-          queryText: detail.raw_text,
-          routingDecision: detail.routing_decision,
-          understanding: {
-            intent_summary: detail.intent_summary ?? "",
-            entities: detail.entities,
-            missing_information: detail.missing_information,
-            alternative_interpretations: detail.alternative_interpretations,
-          },
-          answer: answered.answer,
-          reasoningSteps: timeline.steps,
-          confidenceEvents: timeline.confidence_events,
-          trustScore: trust.trust_score,
-          claims: claimsResponse.claims,
-          sources: sourcesResponse.sources,
-          generationCount: generations.generations.length,
-          status: "ready",
-        });
       } catch (err) {
         const message = err instanceof ApiRequestError ? err.message : "Unexpected error";
         set({ status: "error", errorMessage: message });
@@ -569,6 +608,19 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
       }
     },
 
+    fetchCounterfactual: async (claimId) => {
+      set({ counterfactualClaimId: claimId });
+      try {
+        const result = await claimCounterfactual(claimId);
+        set((state) => ({
+          counterfactuals: { ...state.counterfactuals, [claimId]: result.would_change_if },
+          counterfactualClaimId: null,
+        }));
+      } catch {
+        set({ counterfactualClaimId: null });
+      }
+    },
+
     resumeRun: async (sourceAdded) => {
       const { activeRunId } = get();
       if (!activeRunId) return;
@@ -644,10 +696,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
       closeActiveStream = null;
       set({
         queryText: "",
+        activeQueryText: null,
+        history: [],
         ...clearResults(),
         isRegenerating: false,
         improvingClaimId: null,
         simplifyingClaimId: null,
+        counterfactualClaimId: null,
         isResuming: false,
         status: "idle",
         errorMessage: null,

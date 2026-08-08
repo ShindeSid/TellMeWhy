@@ -6,7 +6,7 @@ export function QueryUnderstandingPanel() {
   const dismissed = useWorkspaceStore((s) => s.understandingDismissed);
   const dismiss = useWorkspaceStore((s) => s.dismissUnderstanding);
   const setQueryText = useWorkspaceStore((s) => s.setQueryText);
-  const queryText = useWorkspaceStore((s) => s.queryText);
+  const activeQueryText = useWorkspaceStore((s) => s.activeQueryText);
 
   if (dismissed || !understanding) return null;
   if (status === "idle" || status === "error") return null;
@@ -15,6 +15,7 @@ export function QueryUnderstandingPanel() {
   const hasAlternatives = understanding.alternative_interpretations.length > 0;
 
   const handleModify = () => {
+    setQueryText(activeQueryText ?? "");
     document.getElementById("query-input")?.focus();
     dismiss();
   };
@@ -23,13 +24,13 @@ export function QueryUnderstandingPanel() {
     const addition = understanding.missing_information
       .map((item) => `\n\n(Regarding ${item.toLowerCase()}: )`)
       .join("");
-    setQueryText(queryText + addition);
+    setQueryText((activeQueryText ?? "") + addition);
     document.getElementById("query-input")?.focus();
     dismiss();
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-blue-200 bg-blue-50 p-4">
+    <div className="flex flex-col gap-2 rounded-2xl border border-blue-200 bg-blue-50 p-4">
       <p className="text-sm text-blue-900">
         <span className="font-semibold">I believe you are asking:</span> {understanding.intent_summary}
       </p>
@@ -62,14 +63,14 @@ export function QueryUnderstandingPanel() {
         <button
           type="button"
           onClick={dismiss}
-          className="rounded-lg bg-blue-900 px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
+          className="cursor-pointer rounded-lg bg-blue-900 px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
         >
           Yes, that's right
         </button>
         <button
           type="button"
           onClick={handleModify}
-          className="rounded-lg border border-blue-300 px-3 py-1.5 text-xs font-medium text-blue-900 transition-colors hover:bg-blue-100"
+          className="cursor-pointer rounded-lg border border-blue-300 px-3 py-1.5 text-xs font-medium text-blue-900 transition-colors hover:bg-blue-100"
         >
           Let me rephrase
         </button>
@@ -77,7 +78,7 @@ export function QueryUnderstandingPanel() {
           <button
             type="button"
             onClick={handleClarify}
-            className="rounded-lg border border-blue-300 px-3 py-1.5 text-xs font-medium text-blue-900 transition-colors hover:bg-blue-100"
+            className="cursor-pointer rounded-lg border border-blue-300 px-3 py-1.5 text-xs font-medium text-blue-900 transition-colors hover:bg-blue-100"
           >
             Add missing detail
           </button>

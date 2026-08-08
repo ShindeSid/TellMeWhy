@@ -24,7 +24,7 @@ function TrustGauge({ value }: { value: number }) {
 
   return (
     <svg width="88" height="88" viewBox="0 0 88 88" className="shrink-0" role="img" aria-label={`Overall trust ${pct} percent`}>
-      <circle cx="44" cy="44" r={radius} fill="none" stroke="#e5e5e5" strokeWidth="8" />
+      <circle cx="44" cy="44" r={radius} fill="none" className="stroke-neutral-200 dark:stroke-neutral-700" strokeWidth="8" />
       <motion.circle
         cx="44"
         cy="44"
@@ -39,7 +39,7 @@ function TrustGauge({ value }: { value: number }) {
         transition={reduceMotion ? { duration: 0 } : { duration: 0.6, ease: "easeOut" }}
         transform="rotate(-90 44 44)"
       />
-      <text x="44" y="49" textAnchor="middle" fontSize="18" fontWeight="600" fill="#171717">
+      <text x="44" y="49" textAnchor="middle" fontSize="18" fontWeight="600" fill="currentColor">
         {pct}%
       </text>
     </svg>
@@ -55,14 +55,14 @@ export function TrustDashboard() {
 
   if (!trustScore) {
     return (
-      <p className="rounded-xl border border-neutral-200 bg-white p-4 text-xs text-neutral-400 shadow-sm">
+      <p className="rounded-xl border border-neutral-200 bg-white p-4 text-xs text-neutral-400 shadow-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-500">
         No trust score available for this answer yet.
       </p>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200/70 bg-white p-4 shadow-card dark:border-neutral-700/70 dark:bg-neutral-800">
       <h2 className="text-sm font-semibold">How much should you trust this?</h2>
       <div className="flex items-center gap-4">
         <TrustGauge value={trustScore.overall_trust} />
@@ -80,22 +80,22 @@ export function TrustDashboard() {
           <span className="text-xs text-trust-high/80">- {confidenceRecovery.reason}</span>
         </div>
       )}
-      <dl className="grid grid-cols-3 gap-2 text-center text-xs text-neutral-500">
-        <div className="rounded-lg bg-neutral-50 p-2">
+      <dl className="grid grid-cols-3 gap-2 text-center text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="rounded-lg bg-neutral-50 p-2 dark:bg-neutral-700/50">
           <dt>Fact-checked</dt>
-          <dd className="mt-0.5 text-sm font-semibold text-neutral-900">
+          <dd className="mt-0.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
             {trustScore.verification_score !== null ? formatPercent(trustScore.verification_score) : "n/a"}
           </dd>
         </div>
-        <div className="rounded-lg bg-neutral-50 p-2">
+        <div className="rounded-lg bg-neutral-50 p-2 dark:bg-neutral-700/50">
           <dt>Up to date</dt>
-          <dd className="mt-0.5 text-sm font-semibold text-neutral-900">
+          <dd className="mt-0.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
             {trustScore.freshness_score !== null ? formatPercent(trustScore.freshness_score) : "n/a"}
           </dd>
         </div>
-        <div className="rounded-lg bg-neutral-50 p-2">
+        <div className="rounded-lg bg-neutral-50 p-2 dark:bg-neutral-700/50">
           <dt>How thorough</dt>
-          <dd className="mt-0.5 text-sm font-semibold text-neutral-900">
+          <dd className="mt-0.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
             {formatPercent(trustScore.reasoning_depth_score ?? 0)}
           </dd>
         </div>

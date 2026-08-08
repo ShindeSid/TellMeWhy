@@ -22,10 +22,10 @@ export function ConfidenceEvolutionChart() {
     .map((s) => ({ stage: STAGE_LABEL[s.stage] ?? s.stage, confidence: Math.round((s.confidence ?? 0) * 100) }));
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="flex flex-col gap-2 rounded-2xl border border-neutral-200/70 bg-white p-4 shadow-card dark:border-neutral-700/70 dark:bg-neutral-800">
       <div>
         <h2 className="text-sm font-semibold">Confidence over time</h2>
-        <p className="text-xs text-neutral-500">How sure the system was at each step of forming this answer.</p>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">How sure the system was at each step of forming this answer.</p>
       </div>
       <div className="h-40">
         <ResponsiveContainer width="100%" height="100%">

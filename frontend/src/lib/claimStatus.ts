@@ -19,9 +19,9 @@ export const STATUS_TEXT_CLASS: Record<ClaimStatus, string> = {
 };
 
 export const STATUS_BG_CLASS: Record<ClaimStatus, string> = {
-  verified: "bg-trust-high/10",
-  weak: "bg-trust-medium/10",
-  unsupported: "bg-trust-low/10",
+  verified: "",
+  weak: "bg-amber-100 dark:bg-amber-900/30",
+  unsupported: "bg-red-100 dark:bg-red-900/30",
 };
 
 export const STATUS_BORDER_CLASS: Record<ClaimStatus, string> = {
@@ -31,7 +31,7 @@ export const STATUS_BORDER_CLASS: Record<ClaimStatus, string> = {
 };
 
 export const STATUS_UNDERLINE_CLASS: Record<ClaimStatus, string> = {
-  verified: "decoration-trust-high",
-  weak: "decoration-trust-medium",
-  unsupported: "decoration-trust-low",
+  verified: "no-underline",
+  weak: "decoration-amber-500",
+  unsupported: "decoration-red-500",
 };

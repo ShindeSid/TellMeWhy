@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 
+import { IconBadgeCheck, IconBrain, IconCompass, IconPencil, IconSearch } from "@/components/icons";
 import { formatPercent } from "@/lib/format";
 import { useWorkspaceStore } from "@/store/useWorkspaceStore";
 
@@ -13,13 +14,13 @@ const STAGE_LABEL: Record<string, string> = {
   answer: "Answer",
 };
 
-const STAGE_ICON: Record<string, string> = {
-  intent: "🧭",
-  planning: "🧠",
-  retrieval: "🔎",
-  reasoning: "✍️",
-  verification: "🔍",
-  answer: "✅",
+const STAGE_ICON: Record<string, typeof IconCompass> = {
+  intent: IconCompass,
+  planning: IconBrain,
+  retrieval: IconSearch,
+  reasoning: IconPencil,
+  verification: IconBadgeCheck,
+  answer: IconBadgeCheck,
 };
 
 function nodeColor(confidence: number | null): string {
@@ -40,10 +41,10 @@ export function GraphOfThought() {
   const selected = steps.find((s) => s.id === selectedId) ?? null;
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200/70 bg-white p-4 shadow-card dark:border-neutral-700/70 dark:bg-neutral-800">
       <div>
         <h2 className="text-sm font-semibold">Graph of Thought</h2>
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
           Click a stage to inspect it. This shows *that* reasoning happened at each stage and how
           confident it was - not the model's internal chain-of-thought.
         </p>
@@ -71,9 +72,10 @@ export function GraphOfThought() {
                 selectedId === step.id ? "ring-2 ring-neutral-900" : ""
               }`}
             >
-              <span className="text-lg" aria-hidden="true">
-                {STAGE_ICON[step.stage] ?? "•"}
-              </span>
+              {(() => {
+                const Icon = STAGE_ICON[step.stage];
+                return Icon ? <Icon className="h-4 w-4" /> : <span className="h-4 w-4" aria-hidden="true" />;
+              })()}
               <span className="text-xs font-semibold">{STAGE_LABEL[step.stage] ?? step.stage}</span>
               <span className="text-[10px]">{step.confidence !== null ? formatPercent(step.confidence) : "..."}</span>
             </button>
@@ -87,12 +89,16 @@ export function GraphOfThought() {
             initial={reduceMotion ? false : { opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={reduceMotion ? undefined : { opacity: 0, height: 0 }}
-            className="overflow-hidden rounded-lg bg-neutral-50 p-3 text-sm"
+            className="overflow-hidden rounded-lg bg-neutral-50 p-3 text-sm dark:bg-neutral-900"
           >
-            <p className="font-medium">
-              {STAGE_ICON[selected.stage]} {STAGE_LABEL[selected.stage] ?? selected.stage}
+            <p className="flex items-center gap-1.5 font-medium">
+              {(() => {
+                const Icon = STAGE_ICON[selected.stage];
+                return Icon ? <Icon className="h-4 w-4" /> : null;
+              })()}
+              {STAGE_LABEL[selected.stage] ?? selected.stage}
             </p>
-            <p className="mt-1 text-neutral-600">{selected.summary}</p>
+            <p className="mt-1 text-neutral-600 dark:text-neutral-300">{selected.summary}</p>
           </motion.div>
         )}
       </AnimatePresence>

@@ -29,7 +29,7 @@ export function ReasoningTimeline() {
   if ((status !== "ready" && status !== "generating") || steps.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="flex flex-col gap-2 rounded-2xl border border-neutral-200/70 bg-white p-4 shadow-card dark:border-neutral-700/70 dark:bg-neutral-800">
       <h2 className="text-sm font-semibold">How it got here</h2>
       <ol className="flex flex-col gap-2">
         {steps.map((step, i) => (
@@ -38,7 +38,7 @@ export function ReasoningTimeline() {
             initial={reduceMotion ? false : { opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={reduceMotion ? { duration: 0 } : { delay: i * 0.06 }}
-            className="rounded-lg border border-neutral-100 bg-neutral-50 p-2.5 text-sm"
+            className="rounded-lg border border-neutral-100 bg-neutral-50 p-2.5 text-sm dark:border-neutral-700 dark:bg-neutral-700/40"
           >
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 font-medium">
@@ -46,10 +46,10 @@ export function ReasoningTimeline() {
                 {STAGE_LABEL[step.stage] ?? step.stage}
               </span>
               {step.confidence !== null && (
-                <span className="text-xs text-neutral-500">{formatPercent(step.confidence)} confident</span>
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">{formatPercent(step.confidence)} confident</span>
               )}
             </div>
-            <p className="mt-1 text-xs text-neutral-500">{step.summary}</p>
+            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{step.summary}</p>
           </motion.li>
         ))}
       </ol>

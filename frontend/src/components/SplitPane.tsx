@@ -90,9 +90,13 @@ export function SplitPane({
 
   if (!isDesktop) {
     return (
-      <div className="flex flex-col gap-6">
-        <section aria-label={leftLabel}>{left}</section>
-        <section aria-label={rightLabel}>{right}</section>
+      <div className="flex h-full flex-col gap-6">
+        <section aria-label={leftLabel} className="h-[70vh] min-h-[420px] shrink-0">
+          {left}
+        </section>
+        <section aria-label={rightLabel} className="overflow-y-auto">
+          {right}
+        </section>
       </div>
     );
   }
@@ -102,7 +106,7 @@ export function SplitPane({
       <section
         aria-label={leftLabel}
         style={{ width: `calc(${ratio * 100}% - 6px)` }}
-        className="min-h-0 shrink-0 overflow-y-auto pr-2"
+        className="min-h-0 shrink-0 overflow-hidden pr-2"
       >
         {left}
       </section>
@@ -123,12 +127,12 @@ export function SplitPane({
         onDoubleClick={() => setRatio(DEFAULT_RATIO)}
         title="Drag to resize - double-click to reset"
         className={`group relative w-3 shrink-0 cursor-col-resize touch-none focus:outline-none ${
-          isDragging ? "bg-neutral-300" : "hover:bg-neutral-200"
+          isDragging ? "bg-neutral-300 dark:bg-neutral-600" : "hover:bg-neutral-200 dark:hover:bg-neutral-700"
         }`}
       >
         <div
           className={`absolute left-1/2 top-1/2 h-10 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors ${
-            isDragging ? "bg-neutral-500" : "bg-neutral-300 group-hover:bg-neutral-400 group-focus-visible:bg-neutral-500"
+            isDragging ? "bg-neutral-500 dark:bg-neutral-400" : "bg-neutral-300 dark:bg-neutral-600 group-hover:bg-neutral-400 dark:group-hover:bg-neutral-500 group-focus-visible:bg-neutral-500 dark:group-focus-visible:bg-neutral-400"
           }`}
         />
       </div>

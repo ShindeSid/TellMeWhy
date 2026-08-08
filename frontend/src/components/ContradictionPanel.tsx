@@ -12,10 +12,10 @@ export function ContradictionPanel() {
   if ((status !== "ready" && status !== "generating") || sources.length < 2) return null;
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="flex flex-col gap-2 rounded-2xl border border-neutral-200/70 border-t-2 border-t-teal-400 bg-white p-4 shadow-card dark:border-neutral-700/70 dark:border-t-teal-500 dark:bg-neutral-800">
       <div>
         <h2 className="text-sm font-semibold">Do the sources agree?</h2>
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
           A quick automated scan for sources that state different numbers about the same topic
           - not a meaning-level check, just a heads-up worth reading closely.
         </p>
@@ -30,10 +30,10 @@ export function ContradictionPanel() {
           {findings.map((f, i) => (
             <li key={i} className="rounded-lg border border-trust-medium/30 bg-trust-medium/5 p-2.5 text-sm">
               <p className="font-medium text-trust-medium">Possible disagreement about "{f.keyword}"</p>
-              <p className="mt-1 text-neutral-700">
+              <p className="mt-1 text-neutral-700 dark:text-neutral-300">
                 <span className="font-medium">{f.sourceA}:</span> {f.sentenceA}
               </p>
-              <p className="mt-1 text-neutral-700">
+              <p className="mt-1 text-neutral-700 dark:text-neutral-300">
                 <span className="font-medium">{f.sourceB}:</span> {f.sentenceB}
               </p>
             </li>

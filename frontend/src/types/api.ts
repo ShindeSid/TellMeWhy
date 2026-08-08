@@ -60,9 +60,16 @@ export interface GenerationListResponse {
   generations: AnswerRecord[];
 }
 
+export interface DecisionRecord {
+  recommendation: string;
+  confidence_phrase: string;
+  key_caveat: string;
+}
+
 export interface AnswerResponse {
   query_id: string;
   answer: AnswerRecord;
+  decision: DecisionRecord | null;
 }
 
 export interface ReasoningStep {
@@ -154,22 +161,16 @@ export interface ApiError {
   detail: string;
 }
 
-export interface DemoScenarioSummary {
-  id: string;
-  title: string;
-  query_text: string;
-  trust_slider_value: number;
-  uses_retrieval: boolean;
-}
-
-export interface DemoScenarioListResponse {
-  scenarios: DemoScenarioSummary[];
-}
-
 export interface SimplifyResponse {
   claim_id: string;
   original_text: string;
   simplified_text: string;
+}
+
+export interface CounterfactualResponse {
+  claim_id: string;
+  original_text: string;
+  would_change_if: string;
 }
 
 export type KnowledgeSourceType = "file" | "url" | "text";

@@ -20,7 +20,7 @@ function StageChecklist({ completedStages, droppedAt }: { completedStages: strin
         const isDone = completedStages.includes(stage) && !isDropped;
         if (!isDone && !isDropped) return null;
         return (
-          <li key={stage} className={isDropped ? "font-medium text-amber-700" : "text-neutral-500"}>
+          <li key={stage} className={isDropped ? "font-medium text-amber-700" : "text-neutral-500 dark:text-neutral-400"}>
             {isDropped ? "⚠" : "✓"} {STAGE_LABEL[stage] ?? stage}
             {isDropped && " - confidence dropped here"}
           </li>
@@ -105,11 +105,11 @@ export function ConfidenceDropModal() {
       aria-label="Confidence dropped - collaborative recovery"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
     >
-      <div className="flex w-full max-w-md flex-col gap-4 rounded-xl bg-white p-5 shadow-xl">
+      <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl bg-white p-5 shadow-xl dark:bg-neutral-800">
         <div>
           <p className="text-sm font-semibold text-amber-800">Confidence decreased</p>
           <div className="mt-1 flex items-center gap-3 text-2xl font-bold">
-            <span className="text-neutral-400">{formatPercent(drop.previous)}</span>
+            <span className="text-neutral-400 dark:text-neutral-500">{formatPercent(drop.previous)}</span>
             <span aria-hidden="true" className="text-neutral-300">
               →
             </span>
@@ -119,7 +119,7 @@ export function ConfidenceDropModal() {
 
         <StageChecklist completedStages={drop.completedStages} droppedAt={drop.stage} />
 
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-neutral-600 dark:text-neutral-300">
           <span className="font-medium">Reason: </span>
           {drop.reason}
         </p>
@@ -132,7 +132,7 @@ export function ConfidenceDropModal() {
               type="button"
               disabled={busy}
               onClick={() => act(() => fileInputRef.current?.click())}
-              className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-100 disabled:opacity-40"
+              className="cursor-pointer rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-100 disabled:opacity-40 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700"
             >
               Upload PDF
             </button>
@@ -141,7 +141,7 @@ export function ConfidenceDropModal() {
               type="button"
               disabled={busy}
               onClick={() => act(() => setMode("url"))}
-              className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-100 disabled:opacity-40"
+              className="cursor-pointer rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-100 disabled:opacity-40 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700"
             >
               Add URL
             </button>
@@ -149,7 +149,7 @@ export function ConfidenceDropModal() {
               type="button"
               disabled={busy}
               onClick={() => act(() => setMode("note"))}
-              className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-100 disabled:opacity-40"
+              className="cursor-pointer rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-100 disabled:opacity-40 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700"
             >
               Paste Text
             </button>
@@ -165,12 +165,12 @@ export function ConfidenceDropModal() {
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="https://..."
               disabled={busy}
-              className="min-w-0 flex-1 rounded-lg border border-neutral-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-60"
+              className="min-w-0 flex-1 rounded-lg border border-neutral-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-60 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
             />
             <button
               type="submit"
               disabled={busy || !urlInput.trim()}
-              className="shrink-0 rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-40"
+              className="shrink-0 cursor-pointer rounded-lg bg-gradient-to-r from-brand-600 to-indigo-700 px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               Add
             </button>
@@ -186,19 +186,19 @@ export function ConfidenceDropModal() {
               rows={3}
               disabled={busy}
               placeholder="Paste supporting text..."
-              className="resize-none rounded-lg border border-neutral-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-60"
+              className="resize-none rounded-lg border border-neutral-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-60 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
             />
             <button
               type="submit"
               disabled={busy || !noteInput.trim()}
-              className="self-start rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-40"
+              className="self-start cursor-pointer rounded-lg bg-gradient-to-r from-brand-600 to-indigo-700 px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               Add
             </button>
           </form>
         )}
 
-        {busy && <p className="text-xs text-neutral-400">{isUploading ? "Processing your source..." : "Resuming..."}</p>}
+        {busy && <p className="text-xs text-neutral-400 dark:text-neutral-500">{isUploading ? "Processing your source..." : "Resuming..."}</p>}
         {uploadError && <p className="text-xs text-red-600">{uploadError}</p>}
 
         <div className="flex items-center justify-between border-t border-neutral-100 pt-3">
@@ -206,11 +206,11 @@ export function ConfidenceDropModal() {
             type="button"
             disabled={busy}
             onClick={() => act(() => void resumeRun(false))}
-            className="text-sm font-medium text-neutral-500 underline hover:text-neutral-700 disabled:opacity-40"
+            className="cursor-pointer text-sm font-medium text-neutral-500 dark:text-neutral-400 underline hover:text-neutral-700 dark:hover:text-neutral-300 disabled:opacity-40"
           >
             Continue without upload
           </button>
-          <span className="text-xs text-neutral-400" aria-live="polite">
+          <span className="text-xs text-neutral-400 dark:text-neutral-500" aria-live="polite">
             {hasActedRef.current ? "" : `Continuing automatically in ${secondsLeft}...`}
           </span>
         </div>

@@ -1,3 +1,4 @@
+import { IconLightbulb } from "@/components/icons";
 import { useWorkspaceStore } from "@/store/useWorkspaceStore";
 
 export function WhyNotPanel() {
@@ -42,9 +43,9 @@ export function WhyNotPanel() {
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4">
+    <div className="flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-4">
       <h2 className="flex items-center gap-1.5 text-sm font-semibold text-amber-900">
-        <span aria-hidden="true">💡</span> Why isn't this more confident?
+        <IconLightbulb className="h-4 w-4" /> Why isn't this more confident?
       </h2>
       <ul className="flex flex-col gap-1.5 text-sm text-amber-900">
         {reasons.map((reason, i) => (

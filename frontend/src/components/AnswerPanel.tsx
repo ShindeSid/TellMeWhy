@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 
+import { IconPause } from "@/components/icons";
 import { useWorkspaceStore } from "@/store/useWorkspaceStore";
 import { STATUS_BG_CLASS, STATUS_ICON, STATUS_LABEL, STATUS_UNDERLINE_CLASS } from "@/lib/claimStatus";
 import type { Claim } from "@/types/api";
@@ -13,23 +14,33 @@ function ClaimPopover({ claim }: { claim: Claim }) {
   const isImproving = useWorkspaceStore((s) => s.improvingClaimId === claim.id);
   const simplifyClaim = useWorkspaceStore((s) => s.simplifyClaim);
   const improveClaim = useWorkspaceStore((s) => s.improveClaim);
+  const counterfactual = useWorkspaceStore((s) => s.counterfactuals[claim.id]);
+  const isFetchingCounterfactual = useWorkspaceStore((s) => s.counterfactualClaimId === claim.id);
+  const fetchCounterfactual = useWorkspaceStore((s) => s.fetchCounterfactual);
 
   return (
     <span
       role="dialog"
       aria-label="Claim details"
-      className="absolute left-0 top-full z-10 mt-1 w-72 rounded-lg border border-neutral-200 bg-white p-3 text-left text-xs normal-case shadow-lg"
+      className="absolute left-0 top-full z-10 mt-1 w-72 rounded-lg border border-neutral-200 bg-white p-3 text-left text-xs normal-case shadow-lg dark:border-neutral-700 dark:bg-neutral-800"
     >
       <span className={`block font-semibold ${STATUS_ICON[claim.status] ? "" : ""}`}>
         {STATUS_ICON[claim.status]} {STATUS_LABEL[claim.status]}
       </span>
-      {claim.verification_notes && <span className="mt-1 block text-neutral-500">{claim.verification_notes}</span>}
+      {claim.verification_notes && <span className="mt-1 block text-neutral-500 dark:text-neutral-400">{claim.verification_notes}</span>}
 
       {simplified && (
-        <span className="mt-2 block rounded bg-neutral-50 p-2 text-neutral-700">{simplified}</span>
+        <span className="mt-2 block rounded bg-neutral-50 p-2 text-neutral-700 dark:bg-neutral-700/50 dark:text-neutral-300">{simplified}</span>
       )}
 
-      <span className="mt-2 flex gap-1.5">
+      {counterfactual && (
+        <span className="mt-2 block rounded bg-blue-50 p-2 text-blue-800">
+          <span className="font-medium">Would change if: </span>
+          {counterfactual}
+        </span>
+      )}
+
+      <span className="mt-2 flex flex-wrap gap-1.5">
         <button
           type="button"
           onClick={(e) => {
@@ -37,22 +48,35 @@ function ClaimPopover({ claim }: { claim: Claim }) {
             void simplifyClaim(claim.id);
           }}
           disabled={isSimplifying}
-          className="rounded border border-neutral-300 px-2 py-1 font-medium hover:bg-neutral-100 disabled:opacity-40"
+          className="cursor-pointer rounded border border-neutral-300 px-2 py-1 font-medium hover:bg-neutral-100 disabled:opacity-40"
         >
           {isSimplifying ? "Simplifying..." : "Simplify"}
         </button>
         {claim.status !== "verified" && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              void improveClaim(claim.id);
-            }}
-            disabled={isImproving}
-            className="rounded border border-neutral-300 px-2 py-1 font-medium hover:bg-neutral-100 disabled:opacity-40"
-          >
-            {isImproving ? "Improving..." : "Improve this part"}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                void fetchCounterfactual(claim.id);
+              }}
+              disabled={isFetchingCounterfactual}
+              className="cursor-pointer rounded border border-neutral-300 px-2 py-1 font-medium hover:bg-neutral-100 disabled:opacity-40"
+            >
+              {isFetchingCounterfactual ? "Checking..." : "What would change this?"}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                void improveClaim(claim.id);
+              }}
+              disabled={isImproving}
+              className="cursor-pointer rounded border border-neutral-300 px-2 py-1 font-medium hover:bg-neutral-100 disabled:opacity-40"
+            >
+              {isImproving ? "Improving..." : "Improve this part"}
+            </button>
+          </>
         )}
       </span>
     </span>
@@ -62,8 +86,12 @@ function ClaimPopover({ claim }: { claim: Claim }) {
 function HighlightedAnswer({ text, claims }: { text: string; claims: Claim[] }) {
   const [openClaimId, setOpenClaimId] = useState<string | null>(null);
 
+  // Only flag claims that actually need attention — verified claims render
+  // as plain text so the answer doesn't look like a highlighted textbook.
   const spans = claims
-    .filter((c) => c.span_start !== null && c.span_end !== null)
+    .filter(
+      (c) => c.span_start !== null && c.span_end !== null && c.status !== "verified"
+    )
     .sort((a, b) => (a.span_start ?? 0) - (b.span_start ?? 0));
 
   if (spans.length === 0) {
@@ -105,17 +133,20 @@ function HighlightedAnswer({ text, claims }: { text: string; claims: Claim[] }) 
 }
 
 function HighlightLegend({ claims }: { claims: Claim[] }) {
-  const present = Array.from(new Set(claims.map((c) => c.status)));
+  // Only show the legend for flagged claims (weak / unsupported) — there's no
+  // value in a legend that just says "green = verified" when nothing is highlighted.
+  const flagged = claims.filter((c) => c.status !== "verified");
+  const present = Array.from(new Set(flagged.map((c) => c.status)));
   if (present.length === 0) return null;
   return (
-    <div className="flex flex-wrap gap-3 text-xs text-neutral-500">
+    <div className="flex flex-wrap gap-3 text-xs text-neutral-500 dark:text-neutral-400">
       {present.map((status) => (
         <span key={status} className="flex items-center gap-1">
           <span className={`inline-block h-2.5 w-2.5 rounded-sm ${STATUS_BG_CLASS[status]}`} />
           {STATUS_ICON[status]} {STATUS_LABEL[status]}
         </span>
       ))}
-      <span className="text-neutral-400">Click a highlight for options</span>
+      <span className="text-neutral-400 dark:text-neutral-500">Click a highlight for details</span>
     </div>
   );
 }
@@ -123,14 +154,12 @@ function HighlightLegend({ claims }: { claims: Claim[] }) {
 function HumanInTheLoopGate() {
   const acknowledge = useWorkspaceStore((s) => s.acknowledgeHitl);
   const setQueryText = useWorkspaceStore((s) => s.setQueryText);
-  const queryText = useWorkspaceStore((s) => s.queryText);
+  const activeQueryText = useWorkspaceStore((s) => s.activeQueryText);
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50 p-5">
+    <div className="flex flex-col gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-5">
       <div className="flex items-center gap-2">
-        <span className="text-xl" aria-hidden="true">
-          ⏸
-        </span>
+        <IconPause className="h-5 w-5 shrink-0 text-amber-700" />
         <p className="text-sm font-semibold text-amber-900">
           This answer came back with low confidence - pausing before showing it.
         </p>
@@ -143,24 +172,24 @@ function HumanInTheLoopGate() {
         <button
           type="button"
           onClick={() => {
-            setQueryText(queryText + " (please be more specific: )");
+            setQueryText((activeQueryText ?? "") + " (please be more specific: )");
             document.getElementById("query-input")?.focus();
           }}
-          className="rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100"
+          className="cursor-pointer rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100"
         >
           Ask a clarifying question
         </button>
         <button
           type="button"
           onClick={() => document.getElementById("knowledge-upload")?.scrollIntoView({ behavior: "smooth" })}
-          className="rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100"
+          className="cursor-pointer rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100"
         >
           Add a source first
         </button>
         <button
           type="button"
           onClick={acknowledge}
-          className="rounded-lg bg-amber-900 px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
+          className="cursor-pointer rounded-lg bg-amber-900 px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
         >
           Continue anyway
         </button>
@@ -181,7 +210,7 @@ export function AnswerPanel() {
 
   if (status === "idle") {
     return (
-      <p className="rounded-xl border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-400">
+      <p className="rounded-xl border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-400 dark:text-neutral-500">
         Ask a question above, or try one of the demo scenarios, to get started.
       </p>
     );
@@ -200,7 +229,7 @@ export function AnswerPanel() {
     const label = liveStage ?? (status === "routing" ? "Reading your question..." : "Writing an answer...");
     return (
       <div className="rounded-xl border border-neutral-200 p-4">
-        <div className="flex items-center gap-2 text-sm text-neutral-500" aria-live="polite">
+        <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400" aria-live="polite">
           <span className="h-2 w-2 animate-pulse rounded-full bg-neutral-400" aria-hidden="true" />
           {label}
         </div>
@@ -227,7 +256,7 @@ export function AnswerPanel() {
     }
 
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200/70 bg-white p-4 shadow-card dark:border-neutral-700/70 dark:bg-neutral-800">
         <HighlightedAnswer text={answer.text} claims={claims} />
         <HighlightLegend claims={claims} />
       </div>

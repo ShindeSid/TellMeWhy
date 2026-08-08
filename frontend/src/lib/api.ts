@@ -3,13 +3,13 @@ import type {
   AuthResponse,
   AuthUser,
   ClaimListResponse,
-  DemoScenarioListResponse,
   GenerationListResponse,
   KnowledgeListResponse,
   KnowledgeUploadResponse,
   QueryCreateResponse,
   QueryDetailResponse,
   ReasoningTimelineResponse,
+  CounterfactualResponse,
   SimplifyResponse,
   SourceListResponse,
   SourceRecord,
@@ -113,6 +113,10 @@ export function simplifyClaim(claimId: string): Promise<SimplifyResponse> {
   return request(`/api/claims/${claimId}/simplify`, { method: "POST" });
 }
 
+export function claimCounterfactual(claimId: string): Promise<CounterfactualResponse> {
+  return request(`/api/claims/${claimId}/counterfactual`, { method: "POST" });
+}
+
 export function listGenerations(queryId: string): Promise<GenerationListResponse> {
   return request(`/api/queries/${queryId}/generations`);
 }
@@ -138,14 +142,6 @@ export function setSourceEnabled(sourceId: string, enabled: boolean): Promise<So
     method: "PATCH",
     body: JSON.stringify({ enabled }),
   });
-}
-
-export function listDemoScenarios(): Promise<DemoScenarioListResponse> {
-  return request("/api/demo/scenarios");
-}
-
-export function runDemoScenario(scenarioId: string): Promise<AnswerResponse> {
-  return request(`/api/demo/scenarios/${scenarioId}/run`, { method: "POST" });
 }
 
 export function listKnowledge(): Promise<KnowledgeListResponse> {

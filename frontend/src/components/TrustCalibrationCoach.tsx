@@ -31,11 +31,11 @@ export function TrustCalibrationCoach() {
   const { band, advice } = coachingFor(trustScore.overall_trust);
 
   return (
-    <details className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <details className="rounded-2xl border border-neutral-200/70 bg-white p-4 shadow-card dark:border-neutral-700/70 dark:bg-neutral-800">
       <summary className="cursor-pointer select-none text-sm font-semibold">
         What does {Math.round(trustScore.overall_trust * 100)}% actually mean?
       </summary>
-      <p className="mt-2 text-sm text-neutral-600">
+      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
         <span className="font-medium">{band} confidence.</span> {advice}
       </p>
     </details>

@@ -10,10 +10,10 @@ export function ClaimVerificationPanel() {
   const verifiedCount = claims.filter((c) => c.status === "verified").length;
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="flex flex-col gap-2 rounded-2xl border border-neutral-200/70 border-t-2 border-t-teal-400 bg-white p-4 shadow-card dark:border-neutral-700/70 dark:border-t-teal-500 dark:bg-neutral-800">
       <div>
         <h2 className="text-sm font-semibold">Fact-check breakdown</h2>
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
           {verifiedCount} of {claims.length} statement{claims.length === 1 ? "" : "s"} in the answer
           {" "}could be matched to the sources used.
         </p>
@@ -34,7 +34,7 @@ export function ClaimVerificationPanel() {
                   {STATUS_LABEL[claim.status]}
                 </p>
                 {claim.verification_notes && (
-                  <p className="mt-0.5 text-xs text-neutral-500">{claim.verification_notes}</p>
+                  <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">{claim.verification_notes}</p>
                 )}
               </div>
             </div>
