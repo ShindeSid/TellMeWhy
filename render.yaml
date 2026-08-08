@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: tellmewhy-backend
+    env: python
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        value: "sqlite+aiosqlite:////data/trust_graph.db"
+      - key: CHROMA_PERSIST_DIR
+        value: "/data/chroma_data"
+      - key: CORS_ORIGINS
+        value: "http://localhost:3000,https://YOUR_VERCEL_PROJECT_URL.vercel.app" # The user needs to update this!
+    disk:
+      name: tellmewhy-data
+      mountPath: /data
+      sizeGB: 1
