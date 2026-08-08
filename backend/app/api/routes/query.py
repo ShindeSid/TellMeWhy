@@ -14,6 +14,7 @@ from app.routing.adaptive_engine import AdaptiveRoutingEngine, GenerationResult,
 from app.routing.llm_clients import GeminiUnavailableError
 from app.trust_graph import graph_store
 from app.trust_graph.schema import RoutingDecisionRecord
+from app.understanding.decision import synthesize_decision
 from app.understanding.service import analyze_query
 from app.verification.service import verify_answer
 
@@ -98,7 +99,18 @@ async def _finalize_generation(
         verification_score,
         had_sources=result.context_used is not None,
     )
-    return AnswerResponse(query_id=query_id, answer=answer)
+
+    trust_score = await graph_store.get_trust_score(query_id, generation_number)
+    query = await graph_store.get_query(query_id)
+    weak_texts = [c.text for c in claims if c.status in ("weak", "unsupported")]
+    decision_record = await synthesize_decision(
+        query.raw_text if query else "",
+        result.answer_text,
+        trust_score.overall_trust if trust_score else 0.5,
+        weak_texts,
+    )
+
+    return AnswerResponse(query_id=query_id, answer=answer, decision=decision_record)
 
 
 @router.post("/{query_id}/answer", response_model=AnswerResponse)

@@ -1,12 +1,10 @@
 import asyncio
-import re
 import threading
 from typing import AsyncIterator
 
 import google.generativeai as genai
 
 from app.core.config import get_settings
-from app.demo.scenarios import find_scenario_for_query
 
 
 class GeminiUnavailableError(RuntimeError):
@@ -70,43 +68,3 @@ class GeminiClient:
             yield item
 
 
-_QUESTION_LINE = re.compile(r"Question:\s*(.+)")
-_SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+")
-
-
-class DemoLLMClient:
-    """Demo Mode (F39): returns a preset answer instead of calling Gemini.
-    Matches the scenario by looking for its query text inside the prompt -
-    works for both the direct prompt (small/large LLM) and the
-    "Context:...\\nQuestion: ...\\n" RAG prompt shape."""
-
-    async def generate(self, prompt: str, *, large: bool) -> str:
-        return self._resolve(prompt)
-
-    async def generate_stream(self, prompt: str, *, large: bool) -> AsyncIterator[str]:
-        """NOT live generation - the full canned answer is already known
-        before this is called. This replays it sentence-by-sentence on a
-        fixed cadence purely so the streaming UI has something to animate
-        in Demo Mode, since DemoLLMClient has nothing real to stream from.
-        This is the one deliberate, disclosed exception to "no fake
-        progress" in the whole streaming pipeline - every other event in
-        app/streaming/pipeline.py corresponds to genuine backend work."""
-        full = self._resolve(prompt)
-        for sentence in _SENTENCE_BOUNDARY.split(full):
-            if sentence:
-                yield sentence + " "
-                await asyncio.sleep(0.15)
-
-    def _resolve(self, prompt: str) -> str:
-        match = _QUESTION_LINE.search(prompt)
-        query_text = match.group(1).strip() if match else prompt.strip()
-
-        scenario = find_scenario_for_query(query_text)
-        if scenario:
-            return scenario.canned_answer
-
-        return (
-            "[Demo Mode] No preset answer matches this query - Demo Mode only has canned "
-            "responses for the three preset scenarios (Medical, Programming, Current Affairs). "
-            "Try one of those, or configure a real GEMINI_API_KEY to answer arbitrary questions."
-        )

@@ -12,10 +12,8 @@ store, so disabling a source and regenerating actually changes the prompt.
 from dataclasses import dataclass
 from typing import AsyncIterator
 
-from app.core.config import get_settings
-from app.demo.scenarios import find_scenario_for_query
 from app.ingestion.connectors import search_by_domain
-from app.routing.llm_clients import DemoLLMClient, GeminiClient
+from app.routing.llm_clients import GeminiClient
 from app.trust_graph.schema import RoutingDecisionRecord
 
 
@@ -39,13 +37,8 @@ class GenerationResult:
 
 
 class AdaptiveRoutingEngine:
-    def __init__(self, llm_client: GeminiClient | DemoLLMClient | None = None) -> None:
-        if llm_client is not None:
-            self._llm = llm_client
-        elif get_settings().demo_mode:
-            self._llm = DemoLLMClient()
-        else:
-            self._llm = GeminiClient()
+    def __init__(self, llm_client: GeminiClient | None = None) -> None:
+        self._llm = llm_client if llm_client is not None else GeminiClient()
 
     async def execute(
         self, query_text: str, decision: RoutingDecisionRecord, domain: str | None = None
@@ -127,22 +120,6 @@ class AdaptiveRoutingEngine:
         return "\n\n".join(texts) if texts else "(no indexed sources yet)"
 
     async def retrieve_chunks(self, query_text: str, domain: str | None = None) -> list[RetrievedChunk]:
-        if get_settings().demo_mode:
-            scenario = find_scenario_for_query(query_text)
-            if scenario and scenario.chunks:
-                return [
-                    RetrievedChunk(text=c.text, title=c.title, url=None, similarity=0.9)
-                    for c in scenario.chunks
-                ]
-            return [
-                RetrievedChunk(
-                    text="(Demo Mode: no preset sources for this query.)",
-                    title="Demo Mode",
-                    url=None,
-                    similarity=None,
-                )
-            ]
-
         # Live external sources (Feature 3) - real HTTP calls, no fixed
         # cosine similarity like the vector-store hits below, so similarity
         # is left null rather than a fabricated number.

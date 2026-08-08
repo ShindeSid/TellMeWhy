@@ -26,6 +26,7 @@ class EventType:
     CLAIM_VERIFIED = "CLAIM_VERIFIED"  # one per claim
     CONFIDENCE_UPDATED = "CONFIDENCE_UPDATED"
     TRUST_UPDATED = "TRUST_UPDATED"
+    DECISION_SYNTHESIZED = "DECISION_SYNTHESIZED"  # V2: recommendation + plain-language confidence + key caveat
     ANSWER_COMPLETED = "ANSWER_COMPLETED"
     ERROR = "ERROR"
 

@@ -31,6 +31,7 @@ from app.streaming.events import EventType
 from app.streaming.registry import RunHandle
 from app.trust_graph import graph_store
 from app.trust_graph.schema import ClaimRecord
+from app.understanding.decision import synthesize_decision
 from app.verification.claim_splitter import split_into_claims
 from app.verification.verifier import ClaimVerification, score_from_claims, verify_claims
 
@@ -312,6 +313,15 @@ async def run_answer(query_id: str, generation_number: int, bus: RunEventBus, ru
             recovered=recovered,
         )
 
+        weak_texts = [v.text for v in verifications if v.status in ("weak", "unsupported")]
+        decision_record = await synthesize_decision(query.raw_text, answer_text, overall_trust, weak_texts)
+        await bus.emit(
+            EventType.DECISION_SYNTHESIZED,
+            recommendation=decision_record.recommendation,
+            confidence_phrase=decision_record.confidence_phrase,
+            key_caveat=decision_record.key_caveat,
+        )
+
         await bus.emit(
             EventType.ANSWER_COMPLETED,
             answer_id=answer.id, text=answer.text, route_used=answer.route_used,
@@ -436,6 +446,16 @@ async def run_regenerate(
             reasoning_depth_score=trust_score.reasoning_depth_score,
             plain_english_summary=trust_score.plain_english_summary,
         )
+
+        weak_texts = [v.text for v in verifications if v.status in ("weak", "unsupported")]
+        decision_record = await synthesize_decision(query.raw_text, answer_text, overall_trust, weak_texts)
+        await bus.emit(
+            EventType.DECISION_SYNTHESIZED,
+            recommendation=decision_record.recommendation,
+            confidence_phrase=decision_record.confidence_phrase,
+            key_caveat=decision_record.key_caveat,
+        )
+
         await bus.emit(
             EventType.ANSWER_COMPLETED,
             answer_id=answer.id, text=answer.text, route_used=answer.route_used,

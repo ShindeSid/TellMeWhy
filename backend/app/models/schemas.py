@@ -18,6 +18,7 @@ from app.trust_graph.schema import (
     SourceRecord,
     TrustScoreRecord,
 )
+from app.understanding.decision import DecisionRecord
 from app.understanding.service import QueryUnderstanding
 
 
@@ -67,6 +68,7 @@ class QueryDetailResponse(BaseModel):
 class AnswerResponse(BaseModel):
     query_id: str
     answer: AnswerRecord
+    decision: DecisionRecord | None = None
 
 
 class ReasoningTimelineResponse(BaseModel):
@@ -103,6 +105,12 @@ class SimplifyResponse(BaseModel):
     claim_id: str
     original_text: str
     simplified_text: str
+
+
+class CounterfactualResponse(BaseModel):
+    claim_id: str
+    original_text: str
+    would_change_if: str
 
 
 class KnowledgeUploadRequest(BaseModel):

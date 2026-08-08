@@ -4,7 +4,7 @@ question, pulls out key entities, and flags missing information / plausible
 alternative readings, so the user can correct a misread before generation
 even starts. This is a real LLM call (not fabricated heuristics dressed up
 as understanding), with a heuristic fallback if the model returns malformed
-JSON, and canned data in Demo Mode so it never depends on a live key.
+JSON or the call fails.
 """
 
 import json
@@ -12,8 +12,6 @@ import re
 
 from pydantic import BaseModel
 
-from app.core.config import get_settings
-from app.demo.scenarios import find_scenario_for_query
 from app.routing.llm_clients import GeminiClient
 
 _PROMPT = """Analyze this user question and respond with ONLY a JSON object \
@@ -53,14 +51,6 @@ def _heuristic_fallback(query_text: str) -> QueryUnderstanding:
 
 
 async def analyze_query(query_text: str) -> QueryUnderstanding:
-    settings = get_settings()
-
-    if settings.demo_mode:
-        scenario = find_scenario_for_query(query_text)
-        if scenario and scenario.understanding:
-            return QueryUnderstanding(**scenario.understanding)
-        return _heuristic_fallback(query_text)
-
     try:
         client = GeminiClient()
         raw = await client.generate(_PROMPT.format(query_text=query_text), large=False)
